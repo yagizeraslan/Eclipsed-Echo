@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45d8ba0ca3633ac4c987bcc8c31efea7, type: 3}
   m_Name: SoundSettings
   m_EditorClassIdentifier: 
-  cardFlipClip: {fileID: 0}
-  cardMatchClip: {fileID: 0}
-  cardNoMatchClip: {fileID: 0}
-  gameOverClip: {fileID: 0}
+  cardFlipClip: {fileID: 8300000, guid: bb848936a294bf046a33cd29cfca5322, type: 3}
+  cardMatchClip: {fileID: 8300000, guid: 82a7939aa8ad8b34c8fa31872a0d4aa4, type: 3}
+  cardNoMatchClip: {fileID: 8300000, guid: 3be1d29da55c3894fb7dce04528e6ed5, type: 3}
+  levelCompletedClip: {fileID: 0}
