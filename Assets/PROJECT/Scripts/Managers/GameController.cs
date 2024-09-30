@@ -10,84 +10,123 @@ namespace YagizEraslan.EclipsedEcho
         public UnityAction<int> OnScoreUpdated;
         public UnityAction<int> OnTurnsUpdated;
         public UnityAction<int> OnMatchesUpdated;
+        public UnityAction<float> OnTimerUpdated;
 
-        private List<Card> flippedCards = new List<Card>(); // Cards waiting for comparison
+        private List<Card> flippedCards = new List<Card>();
 
         private int score;
         private int turns;
         private int matches;
+        private float timer;
+        private bool isTiming;
+        private float lastDisplayedTime = 0f;
 
         public int Score => score;
         public int Turns => turns;
         public int Matches => matches;
+        public float Timer => timer;
 
-        public bool IsProcessing { get; private set; } // Remove global processing for flipping
+        public bool IsProcessing { get; private set; }
+
+        public void InitializeStartingValues()
+        {
+            score = 0;
+            turns = 0;
+            matches = 0;
+            timer = 0f;
+            isTiming = false;
+
+            OnScoreUpdated?.Invoke(score);
+            OnTurnsUpdated?.Invoke(turns);
+            OnMatchesUpdated?.Invoke(matches);
+            OnTimerUpdated?.Invoke(timer);
+        }
+
+        private void Update()
+        {
+            if (isTiming)
+            {
+                UpdateTimer(Time.deltaTime);
+            }
+        }
+
+        private void UpdateTimer(float deltaTime)
+        {
+            timer += deltaTime;
+
+            if (Mathf.FloorToInt(timer) != Mathf.FloorToInt(lastDisplayedTime))
+            {
+                lastDisplayedTime = timer;
+                OnTimerUpdated?.Invoke(timer);
+            }
+        }
+
+        public void StartTimer()
+        {
+            isTiming = true;
+            timer = 0f;
+            OnTimerUpdated?.Invoke(timer);
+        }
+
+        public void StopTimer()
+        {
+            isTiming = false;
+        }
 
         public void CardSelected(Card card)
         {
-            // Ensure the card is not selected if it's already matched or face-up
             if (card.IsMatched || card.IsFaceUp)
             {
                 return;
             }
 
-            card.FlipToFrontSide(); // Flip the card immediately
-            flippedCards.Add(card); // Add it to the list of flipped cards
+            card.FlipToFrontSide();
+            flippedCards.Add(card);
 
-            // Check if there are two flipped cards for comparison
             if (flippedCards.Count == 2)
             {
                 StartCoroutine(CompareFlippedCards(flippedCards[0], flippedCards[1]));
-                flippedCards.Clear(); // Clear the list for the next two cards
+                flippedCards.Clear();
             }
         }
 
         private IEnumerator CompareFlippedCards(Card firstCard, Card secondCard)
         {
-            // Lock these two cards to prevent interaction with them during comparison
             firstCard.SetInteractable(false);
             secondCard.SetInteractable(false);
 
-            // Wait for a short delay before comparison
             yield return new WaitForSeconds(0.5f);
 
-            // Increase the number of turns
             turns++;
             OnTurnsUpdated?.Invoke(turns);
 
-            // Check if the two cards match
             if (firstCard.CardID == secondCard.CardID)
             {
-                // Cards match
                 matches++;
                 score += 100;
                 OnScoreUpdated?.Invoke(score);
                 OnMatchesUpdated?.Invoke(matches);
 
-                firstCard.Match(); // Mark both cards as matched
+                firstCard.Match();
                 secondCard.Match();
             }
             else
             {
-                // Cards do not match
                 score -= 10;
                 OnScoreUpdated?.Invoke(score);
 
                 firstCard.Mismatch();
                 secondCard.Mismatch();
 
-                // Wait for the mismatch animation before flipping back
                 yield return new WaitForSeconds(1f);
 
                 firstCard.FlipToBackSide();
                 secondCard.FlipToBackSide();
             }
 
-            // Unlock the cards after comparison
             firstCard.SetInteractable(true);
             secondCard.SetInteractable(true);
 
-            // Check if all pairs are matched
             if (CheckIfGameCompleted())
             {
                 GameManager.Instance.GameOver();
@@ -100,5 +139,4 @@ namespace YagizEraslan.EclipsedEcho
             return matches >= totalPairs;
         }
     }
-
 }

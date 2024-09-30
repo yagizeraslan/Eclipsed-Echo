@@ -56,6 +56,7 @@ namespace YagizEraslan.EclipsedEcho
             yield return new WaitForSeconds(0.5f);
             SoundManager.Instance.PlayLevelCompletedSound();
             yield return new WaitForSeconds(0.5f);
+            LevelManager.Instance.ClearGrid();
             gameplayPanel.SetActive(false);
             levelCompletedPanel.SetActive(true);
             OnGameOver?.Invoke();
@@ -72,6 +73,7 @@ namespace YagizEraslan.EclipsedEcho
         {
             levelCompletedPanel.SetActive(false);
             mainMenuPanel.SetActive(true);
+            gameplayPanel.SetActive(false);
         }
     }
 }

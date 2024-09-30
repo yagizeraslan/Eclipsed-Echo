@@ -83,7 +83,7 @@ namespace YagizEraslan.EclipsedEcho
             {
                 animator.SetTrigger("FlipFrontSide");
                 SoundManager.Instance.PlayFlipSound();
-                IsFaceUp = true; // Set the card as face-up after flipping
+                IsFaceUp = true;
             }
         }
 
@@ -93,14 +93,14 @@ namespace YagizEraslan.EclipsedEcho
             {
                 animator.SetTrigger("FlipBackSide");
                 SoundManager.Instance.PlayFlipSound();
-                IsFaceUp = false; // Set the card as face-down after flipping back
+                IsFaceUp = false;
             }
         }
 
         public void Match()
         {
-            IsMatched = true; // Mark the card as matched
-            IsFaceUp = true;  // Keep the card face-up
+            IsMatched = true;
+            IsFaceUp = true;
             animator.SetTrigger("Match");
             SoundManager.Instance.PlayMatchSound();
         }
@@ -109,7 +109,7 @@ namespace YagizEraslan.EclipsedEcho
         {
             animator.SetTrigger("Mismatch");
             SoundManager.Instance.PlayMismatchSound();
-            IsFaceUp = false; // Ensure the card is considered face-down after mismatch
+            IsFaceUp = false;
         }
 
         public void OnFlipAnimationComplete()

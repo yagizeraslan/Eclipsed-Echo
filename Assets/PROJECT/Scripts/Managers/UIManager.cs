@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace YagizEraslan.EclipsedEcho
 {
@@ -19,8 +20,9 @@ namespace YagizEraslan.EclipsedEcho
         [SerializeField] private TextMeshProUGUI levelCompletedBonusText;
         [SerializeField] private TextMeshProUGUI levelCompletedScoreText;
 
-        private float timer;
-        private bool isTiming;
+        [Header("Buttons")]
+        [SerializeField] private Button restartLevelButton;
+        [SerializeField] private Button mainMenuButton;
 
         private void Start()
         {
@@ -30,49 +32,42 @@ namespace YagizEraslan.EclipsedEcho
             GameController.Instance.OnScoreUpdated += UpdateScore;
             GameController.Instance.OnTurnsUpdated += UpdateTurns;
             GameController.Instance.OnMatchesUpdated += UpdateMatches;
-        }
+            GameController.Instance.OnTimerUpdated += UpdateTimer;
 
-        private void Update()
-        {
-            if (isTiming)
-            {
-                timer += Time.deltaTime;
-                //timerText.text = $"Timer: {timer:F2}";
-
-                // Calculate minutes and seconds
-                int minutes = Mathf.FloorToInt(timer / 60);
-                int seconds = Mathf.FloorToInt(timer % 60);
-
-                // Update the timer text in the format "00:00"
-                timerText.text = string.Format(": {0:00}:{1:00}", minutes, seconds);
-            }
-        }
-
-        private void StartTimer()
-        {
-            isTiming = true;
-            timer = 0f;
-        }
-
-        private void StopTimer()
-        {
-            isTiming = false;
-            UpdateLevelCompletedUI();
+            // Add listeners to buttons
+            restartLevelButton.onClick.AddListener(RestartLevel);
+            mainMenuButton.onClick.AddListener(ReturnToMainMenu);
         }
 
         private void UpdateScore(int score)
         {
-            scoreText.text = $"Score: {score}";
+            scoreText.text = $": {score}";
         }
 
         private void UpdateTurns(int turns)
         {
-            turnsText.text = $"Turns: {turns}";
+            turnsText.text = $": {turns}";
         }
 
         private void UpdateMatches(int matches)
         {
-            matchesText.text = $"Matches: {matches}";
+            matchesText.text = $": {matches}";
+        }
+
+        private void UpdateTimer(float timer)
+        {
+            timerText.text = $": {timer.ToString("F1")}";
+        }
+
+        private void StartTimer()
+        {
+            GameController.Instance.StartTimer();
+        }
+
+        private void StopTimer()
+        {
+            GameController.Instance.StopTimer();
+            UpdateLevelCompletedUI();
         }
 
         private void UpdateLevelCompletedUI()
@@ -82,15 +77,25 @@ namespace YagizEraslan.EclipsedEcho
             int bonus = CalculateBonus();
 
             levelCompletedTurnsText.text = $"Turns: {turns}";
-            levelCompletedTimeText.text = $"Completed in {timer:F2} seconds";
+            levelCompletedTimeText.text = $"Completed in {Mathf.Round(GameController.Instance.Timer)} seconds";
             levelCompletedBonusText.text = $"Bonus: {bonus}";
             levelCompletedScoreText.text = $"Score: {finalScore + bonus}";
         }
 
         private int CalculateBonus()
         {
-            // Implement bonus calculation based on time or other factors
             return 0;
+        }
+
+        private void RestartLevel()
+        {
+            GameController.Instance.InitializeStartingValues();
+            LevelManager.Instance.RestartCurrentLevel();
+        }
+
+        private void ReturnToMainMenu()
+        {
+            GameManager.Instance.ReturnToMainMenu();
         }
     }
 }
