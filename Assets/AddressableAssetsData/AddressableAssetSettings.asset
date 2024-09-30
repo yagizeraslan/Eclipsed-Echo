@@ -84,6 +84,8 @@ MonoBehaviour:
   m_LabelTable:
     m_LabelNames:
     - default
+    - FrontSide
+    - BackSide
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 5a2e7d6b6323e5e40aa6c8dfa4499842, type: 2}

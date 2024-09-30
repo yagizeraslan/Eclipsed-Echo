@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: BackSideCards
   m_EditorClassIdentifier: 
   backSideSpriteAddresses:
-  - 
-  - 
-  - 
+  - Assets/PROJECT/Images/Card/Back_Images/Card_Back_1.jpeg
+  - Assets/PROJECT/Images/Card/Back_Images/Card_Back_2.jpeg
+  - Assets/PROJECT/Images/Card/Back_Images/Card_Back_5.jpeg
