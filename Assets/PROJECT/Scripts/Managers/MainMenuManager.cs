@@ -44,7 +44,6 @@ namespace YagizEraslan.EclipsedEcho
             float spacingX = gridLayoutGroup.spacing.x;
             float spacingY = gridLayoutGroup.spacing.y;
 
-            // Minimum and maximum number of columns to consider
             int minColumns = 2;
             int maxColumns = Mathf.FloorToInt((gridWidth + spacingX) / (levelManager.MinCellSize + spacingX));
 
@@ -83,10 +82,8 @@ namespace YagizEraslan.EclipsedEcho
                 }
             }
 
-            // Sort the totalCardOptions list
             totalCardOptions.Sort();
 
-            // Populate the dropdown options
             layoutDropdown.ClearOptions();
             List<string> options = totalCardOptions.ConvertAll(size => size.ToString());
             layoutDropdown.AddOptions(options);

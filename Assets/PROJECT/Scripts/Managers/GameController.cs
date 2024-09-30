@@ -7,104 +7,97 @@ namespace YagizEraslan.EclipsedEcho
 {
     public class GameController : MonoSingleton<GameController>
     {
-        public bool IsProcessing { get; private set; }
-
         public UnityAction<int> OnScoreUpdated;
         public UnityAction<int> OnTurnsUpdated;
         public UnityAction<int> OnMatchesUpdated;
 
-        private Card firstSelectedCard;
-        private Card secondSelectedCard;
+        private List<Card> flippedCards = new List<Card>();
+        private bool isComparing = false;
 
         private int score;
         private int turns;
         private int matches;
 
-        // Public properties to access private fields
         public int Score => score;
         public int Turns => turns;
         public int Matches => matches;
 
+        public bool IsProcessing { get; private set; }
+
         public void CardSelected(Card card)
         {
-            if (firstSelectedCard == null)
-            {
-                firstSelectedCard = card;
-            }
-            else if (secondSelectedCard == null && card != firstSelectedCard)
-            {
-                secondSelectedCard = card;
-                IsProcessing = true;
+            if (card.IsMatched || card.IsFaceUp || isComparing)
+                return;
 
-                // Start a coroutine to wait before comparing cards
-                StartCoroutine(WaitForSecondFlipAndCompare());
+            card.FlipToFrontSide();
+            flippedCards.Add(card);
+
+            if (flippedCards.Count >= 2)
+            {
+                StartCoroutine(CompareFlippedCards());
             }
         }
 
-        private IEnumerator WaitForSecondFlipAndCompare()
+        public void SetProcessing(bool processing)
         {
-            // Wait for the duration of the flip animation
-            yield return new WaitForSeconds(0.5f); // Adjust duration to match your flip animation
-
-            CompareCards();
+            IsProcessing = processing;
         }
 
-        private void CompareCards()
+        private IEnumerator CompareFlippedCards()
         {
-            IsProcessing = true;
-            turns++;
-            OnTurnsUpdated?.Invoke(turns);
+            isComparing = true;
 
-            if (firstSelectedCard.CardID == secondSelectedCard.CardID)
+            // Wait for flip animations to complete
+            yield return new WaitForSeconds(0.5f);
+
+            // Compare cards in pairs
+            while (flippedCards.Count >= 2)
             {
-                matches++;
-                score += 100;
-                OnScoreUpdated?.Invoke(score);
-                OnMatchesUpdated?.Invoke(matches);
+                Card firstCard = flippedCards[0];
+                Card secondCard = flippedCards[1];
 
-                firstSelectedCard.Match();
-                secondSelectedCard.Match();
+                turns++;
+                OnTurnsUpdated?.Invoke(turns);
 
-                Invoke(nameof(DisableMatchedCards), 1f);
+                if (firstCard.CardID == secondCard.CardID)
+                {
+                    matches++;
+                    score += 100;
+                    OnScoreUpdated?.Invoke(score);
+                    OnMatchesUpdated?.Invoke(matches);
+
+                    firstCard.Match();
+                    secondCard.Match();
+
+                    flippedCards.Remove(firstCard);
+                    flippedCards.Remove(secondCard);
+                }
+                else
+                {
+                    score -= 10;
+                    OnScoreUpdated?.Invoke(score);
+
+                    firstCard.Mismatch();
+                    secondCard.Mismatch();
+
+                    yield return new WaitForSeconds(1f);
+
+                    firstCard.FlipToBackSide();
+                    secondCard.FlipToBackSide();
+
+                    flippedCards.Remove(firstCard);
+                    flippedCards.Remove(secondCard);
+                }
+
+                yield return new WaitForSeconds(0.5f);
             }
-            else
-            {
-                score -= 10;
-                OnScoreUpdated?.Invoke(score);
 
-                firstSelectedCard.Mismatch();
-                secondSelectedCard.Mismatch();
-
-                Invoke(nameof(ResetCards), 1f);
-            }
-        }
-
-        private void DisableMatchedCards()
-        {
-            // Interaction is already disabled in Card.Match()
-            // Optionally, you can disable the cards here if necessary
-
-            ResetSelection();
-            IsProcessing = false;
+            isComparing = false;
 
             if (CheckIfGameCompleted())
             {
                 GameManager.Instance.GameOver();
             }
-        }
-
-        private void ResetCards()
-        {
-            firstSelectedCard.FlipToBackSide();
-            secondSelectedCard.FlipToBackSide();
-            ResetSelection();
-            IsProcessing = false;
-        }
-
-        private void ResetSelection()
-        {
-            firstSelectedCard = null;
-            secondSelectedCard = null;
         }
 
         private bool CheckIfGameCompleted()
