@@ -121,6 +121,8 @@ namespace YagizEraslan.EclipsedEcho
             // Shuffle the card IDs
             cardIDs = ShuffleList(cardIDs);
 
+            // Instantiate all cards
+            List<Card> cards = new List<Card>();
             for (int i = 0; i < cardIDs.Count; i++)
             {
                 GameObject cardObj = Instantiate(cardPrefab, cardGridLayoutGroup.transform);
@@ -131,20 +133,18 @@ namespace YagizEraslan.EclipsedEcho
                 string frontSpriteAddress = frontSideCardSpritesAddressables[cardID % frontSideCardSpritesAddressables.Count];
 
                 await card.Initialize(cardID, frontSpriteAddress, selectedBackSideSpriteAddress);
+            }
 
-                // Delay for spawn animation
-                await Task.Delay(100);
+            // Show cards one by one
+            foreach (var card in cards)
+            {
+                card.ShowCard(); // Scale from 0 to 1
+                await Task.Delay(100); // Wait 0.1 seconds between each card
 
-                // Flip to show front side
-                card.FlipCard();
-                SoundManager.Instance.PlayFlipSound();
+                card.FlipToFrontSide(); // Flip to show front side
+                await Task.Delay(1000); // Wait 1 second
 
-                // Delay before flipping back
-                await Task.Delay(500);
-
-                // Flip back to show back side
-                card.FlipCard();
-                SoundManager.Instance.PlayFlipSound();
+                card.FlipToBackSide(); // Flip back to back side
             }
         }
 

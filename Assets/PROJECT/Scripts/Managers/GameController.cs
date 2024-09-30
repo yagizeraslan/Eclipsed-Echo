@@ -34,8 +34,19 @@ namespace YagizEraslan.EclipsedEcho
             else if (secondSelectedCard == null && card != firstSelectedCard)
             {
                 secondSelectedCard = card;
-                CompareCards();
+                IsProcessing = true;
+
+                // Start a coroutine to wait before comparing cards
+                StartCoroutine(WaitForSecondFlipAndCompare());
             }
+        }
+
+        private IEnumerator WaitForSecondFlipAndCompare()
+        {
+            // Wait for the duration of the flip animation
+            yield return new WaitForSeconds(0.5f); // Adjust duration to match your flip animation
+
+            CompareCards();
         }
 
         private void CompareCards()
@@ -70,8 +81,9 @@ namespace YagizEraslan.EclipsedEcho
 
         private void DisableMatchedCards()
         {
-            firstSelectedCard.HideCard();
-            secondSelectedCard.HideCard();
+            // Interaction is already disabled in Card.Match()
+            // Optionally, you can disable the cards here if necessary
+
             ResetSelection();
             IsProcessing = false;
 
@@ -83,8 +95,8 @@ namespace YagizEraslan.EclipsedEcho
 
         private void ResetCards()
         {
-            firstSelectedCard.FlipCard();
-            secondSelectedCard.FlipCard();
+            firstSelectedCard.FlipToBackSide();
+            secondSelectedCard.FlipToBackSide();
             ResetSelection();
             IsProcessing = false;
         }

@@ -37,7 +37,14 @@ namespace YagizEraslan.EclipsedEcho
             if (isTiming)
             {
                 timer += Time.deltaTime;
-                timerText.text = $"Timer: {timer:F2}";
+                //timerText.text = $"Timer: {timer:F2}";
+
+                // Calculate minutes and seconds
+                int minutes = Mathf.FloorToInt(timer / 60);
+                int seconds = Mathf.FloorToInt(timer % 60);
+
+                // Update the timer text in the format "00:00"
+                timerText.text = string.Format(": {0:00}:{1:00}", minutes, seconds);
             }
         }
 

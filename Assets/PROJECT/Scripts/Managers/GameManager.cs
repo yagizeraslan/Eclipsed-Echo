@@ -17,6 +17,8 @@ namespace YagizEraslan.EclipsedEcho
 
         private void Start()
         {
+            Application.targetFrameRate = 60;
+
             ShowMainMenu();
             CheckForSavedGame();
         }

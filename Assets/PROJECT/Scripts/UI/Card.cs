@@ -5,6 +5,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Threading.Tasks;
+using UnityEngine.Events;
 
 
 namespace YagizEraslan.EclipsedEcho
@@ -20,6 +21,9 @@ namespace YagizEraslan.EclipsedEcho
 
         private Animator animator;
 
+        // Event to notify when the flip animation completes
+        public UnityAction<Card> OnFlipComplete;
+
         private void Awake()
         {
             animator = GetComponent<Animator>();
@@ -29,15 +33,17 @@ namespace YagizEraslan.EclipsedEcho
         {
             CardID = cardID;
 
-            // Load front sprite
+            // Load sprites asynchronously
             var frontSpriteLoad = Addressables.LoadAssetAsync<Sprite>(frontSpriteAddress);
             await frontSpriteLoad.Task;
             frontImage.sprite = frontSpriteLoad.Result;
 
-            // Load back sprite
             var backSpriteLoad = Addressables.LoadAssetAsync<Sprite>(backSpriteAddress);
             await backSpriteLoad.Task;
             backImage.sprite = backSpriteLoad.Result;
+
+            // Start in ResetCard state
+            animator.Play("ResetCard", -1, 0f);
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -45,13 +51,29 @@ namespace YagizEraslan.EclipsedEcho
             if (IsMatched || GameController.Instance.IsProcessing)
                 return;
 
-            FlipCard();
+            FlipToFrontSide();
             GameController.Instance.CardSelected(this);
         }
 
-        public void FlipCard()
+        public void ShowCard()
         {
-            animator.SetTrigger("Flip");
+            animator.SetTrigger("ShowCard");
+        }
+
+        public void HideCard()
+        {
+            animator.SetTrigger("HideCard");
+        }
+
+        public void FlipToFrontSide()
+        {
+            animator.SetTrigger("FlipFrontSide");
+            SoundManager.Instance.PlayFlipSound();
+        }
+
+        public void FlipToBackSide()
+        {
+            animator.SetTrigger("FlipBackSide");
             SoundManager.Instance.PlayFlipSound();
         }
 
@@ -68,9 +90,10 @@ namespace YagizEraslan.EclipsedEcho
             SoundManager.Instance.PlayMismatchSound();
         }
 
-        public void HideCard()
+        // This method is called by the animation event at the end of the FlipFrontSide animation
+        public void OnFlipAnimationComplete()
         {
-            gameObject.SetActive(false);
+            OnFlipComplete?.Invoke(this);
         }
     }
 }
