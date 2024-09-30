@@ -94,6 +94,8 @@ namespace YagizEraslan.EclipsedEcho
 
         private void OnPlayButtonClicked()
         {
+            GameController.Instance.InitializeStartingValues();
+
             int selectedLayoutIndex = layoutDropdown.value;
             int selectedGridSize = availableGridSizes[selectedLayoutIndex];
 

@@ -19,10 +19,9 @@ namespace YagizEraslan.EclipsedEcho
         private int selectedGridSize;
         private string selectedBackSideSpriteAddress;
 
-        private float minCellSize = 300f, maxCellSize = 500f;
+        [SerializeField] private float minCellSize = 300f, maxCellSize = 500f;
         public float MinCellSize => minCellSize;
         public float MaxCellSize => maxCellSize;
-
 
         public List<CardCategory> GetCardCategories()
         {
@@ -66,7 +65,6 @@ namespace YagizEraslan.EclipsedEcho
             float spacingX = gridLayoutGroup.spacing.x;
             float spacingY = gridLayoutGroup.spacing.y;
 
-            // Loop over possible columns starting from 2 up to totalCards
             for (int c = 2; c <= totalCards; c++)
             {
                 int r = Mathf.CeilToInt((float)totalCards / c);
@@ -78,7 +76,6 @@ namespace YagizEraslan.EclipsedEcho
 
                 if (currentCellSize >= minCellSize)
                 {
-                    // Update if this configuration gives a larger cell size
                     if (currentCellSize > cellSize)
                     {
                         cellSize = currentCellSize;
@@ -88,7 +85,6 @@ namespace YagizEraslan.EclipsedEcho
                 }
             }
 
-            // Clamp cell size
             cellSize = Mathf.Clamp(cellSize, minCellSize, maxCellSize);
 
             // Set grid layout properties
@@ -99,9 +95,6 @@ namespace YagizEraslan.EclipsedEcho
 
         private async Task SpawnCardsAsync()
         {
-            // Remove this line
-            // GameController.Instance.SetProcessing(true); // Prevent interaction during initial reveal
-
             selectedBackSideSpriteAddress = backSideCards.backSideSpriteAddresses[UnityEngine.Random.Range(0, backSideCards.backSideSpriteAddresses.Count)];
 
             List<string> frontSideCardSpritesAddressables = new List<string>(selectedCardCategory.cardSpriteAddresses);
@@ -150,9 +143,6 @@ namespace YagizEraslan.EclipsedEcho
             {
                 card.SetInteractable(true);
             }
-
-            // Remove this line
-            // GameController.Instance.SetProcessing(false); // Allow player interaction
         }
 
         private async Task ShowAndFlipCard(Card card, float delay)
@@ -176,6 +166,19 @@ namespace YagizEraslan.EclipsedEcho
                 list[randomIndex] = temp;
             }
             return list;
+        }
+
+        public void RestartCurrentLevel()
+        {
+            SetupLevel();
+        }
+
+        public void ClearGrid()
+        {
+            foreach (Transform child in cardGridLayoutGroup.transform)
+            {
+                Destroy(child.gameObject);
+            }
         }
 
         public GridLayoutGroup GetGridLayoutGroup()
