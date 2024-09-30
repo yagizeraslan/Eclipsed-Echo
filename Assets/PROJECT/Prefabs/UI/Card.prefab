@@ -240,6 +240,7 @@ GameObject:
   - component: {fileID: 1751806413052177589}
   - component: {fileID: 1751806413052177586}
   - component: {fileID: 1751806413052177585}
+  - component: {fileID: 3899545346044749956}
   m_Layer: 5
   m_Name: Card
   m_TagString: Untagged
@@ -288,8 +289,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 655bcf6544ba6074cad6425c7830e6ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardFaceImg: {fileID: 1751806412699932447}
-  cardBackImg: {fileID: 1751806412669300900}
+  frontImage: {fileID: 1751806412699932447}
+  backImage: {fileID: 1751806412669300900}
+--- !u!95 &3899545346044749956
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1751806413052177590}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1751806413905447661
 GameObject:
   m_ObjectHideFlags: 0
