@@ -19,30 +19,32 @@ namespace YagizEraslan.EclipsedEcho
         {
             Application.targetFrameRate = 60;
 
-            ShowMainMenu();
-            CheckForSavedGame();
+            ShowMainMenuPanel();
+            //CheckForSavedGame();
         }
 
-        private void ShowMainMenu()
+        public void ShowMainMenuPanel()
         {
             mainMenuPanel.SetActive(true);
+            resumePanel.SetActive(false);
             gameplayPanel.SetActive(false);
             levelCompletedPanel.SetActive(false);
-            resumePanel.SetActive(false);
         }
 
-        private void CheckForSavedGame()
-        {
-            if (DataPersistenceManager.Instance.HasSavedGame())
-            {
-                resumePanel.SetActive(true);
-            }
-        }
+        //private void CheckForSavedGame()
+        //{
+        //    if (DataPersistenceManager.Instance.HasSavedGame())
+        //    {
+        //        resumePanel.SetActive(true);
+        //    }
+        //}
 
-        public void StartGame()
+        public void ShowGameplayPanel()
         {
             mainMenuPanel.SetActive(false);
+            resumePanel.SetActive(false);
             gameplayPanel.SetActive(true);
+            levelCompletedPanel.SetActive(false);
             OnGameStart?.Invoke();
         }
 
@@ -69,11 +71,11 @@ namespace YagizEraslan.EclipsedEcho
             OnGameStart?.Invoke();
         }
 
-        public void ReturnToMainMenu()
-        {
-            levelCompletedPanel.SetActive(false);
-            mainMenuPanel.SetActive(true);
-            gameplayPanel.SetActive(false);
-        }
+        
+
+        //public void RestartGame()
+        //{
+        //    DataPersistenceManager.Instance.SaveSelectedGridType();
+        //}
     }
 }

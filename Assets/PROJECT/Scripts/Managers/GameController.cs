@@ -2,12 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SocialPlatforms.Impl;
 
 namespace YagizEraslan.EclipsedEcho
 {
     public class GameController : MonoSingleton<GameController>
     {
         public UnityAction<int> OnScoreUpdated;
+        public UnityAction<int> OnHighcoreUpdated;
         public UnityAction<int> OnBonusUpdated;
         public UnityAction<int> OnTurnsUpdated;
         public UnityAction<int> OnMatchesUpdated;
@@ -41,6 +43,7 @@ namespace YagizEraslan.EclipsedEcho
             isTiming = false;
 
             OnScoreUpdated?.Invoke(score);
+            OnHighcoreUpdated?.Invoke(DataPersistenceManager.Instance.LoadHighScore());
             OnBonusUpdated?.Invoke(bonus);
             OnTurnsUpdated?.Invoke(turns);
             OnMatchesUpdated?.Invoke(matches);
@@ -97,8 +100,7 @@ namespace YagizEraslan.EclipsedEcho
 
         private IEnumerator CompareFlippedCards(Card firstCard, Card secondCard)
         {
-            firstCard.SetInteractable(false);
-            secondCard.SetInteractable(false);
+            DisableCardsInteraction(firstCard, secondCard);
 
             yield return new WaitForSeconds(0.5f);
 
@@ -134,9 +136,16 @@ namespace YagizEraslan.EclipsedEcho
 
             if (CheckIfGameCompleted())
             {
-                CalculateBonusScore(LevelManager.Instance.TotalPairs / 2, turns, matches * 100, turns * 10, Mathf.FloorToInt(timer));
+                score += CalculateBonusScore(LevelManager.Instance.TotalPairs / 2, turns, matches * 100, turns * 10, Mathf.FloorToInt(timer));
+                DataPersistenceManager.Instance.SaveHighScore(score);
                 GameManager.Instance.GameOver();
             }
+        }
+
+        private void DisableCardsInteraction(Card firstCard, Card secondCard)
+        {
+            firstCard.SetInteractable(false);
+            secondCard.SetInteractable(false);
         }
 
         private int CalculateBonusScore(int totalImages, int turns, int baseScore, int turnPenalty, int timePenalty)
@@ -145,7 +154,7 @@ namespace YagizEraslan.EclipsedEcho
 
             if (totalImages == turns)
             {
-                bonus = (baseScore - turnPenalty - timePenalty) * (bonusMultiplier - 1);
+                bonus = (baseScore - turnPenalty - timePenalty) * bonusMultiplier;
                 OnBonusUpdated?.Invoke(bonus);
             }
             else if (totalImages + 1 == turns)
@@ -156,6 +165,11 @@ namespace YagizEraslan.EclipsedEcho
             else if (totalImages + 2 == turns)
             {
                 bonus = 100;
+                OnBonusUpdated?.Invoke(bonus);
+            }
+            else if (totalImages + 3 == turns)
+            {
+                bonus = 50;
                 OnBonusUpdated?.Invoke(bonus);
             }
             else
@@ -171,6 +185,16 @@ namespace YagizEraslan.EclipsedEcho
         {
             int totalPairs = LevelManager.Instance.TotalPairs;
             return matches >= totalPairs;
+        }
+
+        private void OnDestroy()
+        {
+            GameManager.Instance.OnGameOver -= StopTimer;
+            OnScoreUpdated = null;
+            OnBonusUpdated = null;
+            OnTurnsUpdated = null;
+            OnMatchesUpdated = null;
+            OnTimerUpdated = null;
         }
     }
 }

@@ -14,6 +14,7 @@ namespace YagizEraslan.EclipsedEcho
         [SerializeField] private TextMeshProUGUI scoreText;
         [SerializeField] private TextMeshProUGUI turnsText;
         [SerializeField] private TextMeshProUGUI matchesText;
+        [SerializeField] private TextMeshProUGUI highScoreText;
 
         [Header("Completed Gameplay Texts")]
         [SerializeField] private TextMeshProUGUI levelCompletedTurnsText;
@@ -27,6 +28,11 @@ namespace YagizEraslan.EclipsedEcho
 
         private void Start()
         {
+            if (DataPersistenceManager.Instance.LoadHighScore().ToString() != null) 
+            {
+                highScoreText.text = $"High Score: {DataPersistenceManager.Instance.LoadHighScore().ToString()}";
+            }
+
             GameManager.Instance.OnGameStart += StartTimer;
             GameManager.Instance.OnGameOver += StopTimer;
 
@@ -36,9 +42,8 @@ namespace YagizEraslan.EclipsedEcho
             GameController.Instance.OnMatchesUpdated += UpdateMatches;
             GameController.Instance.OnTimerUpdated += UpdateTimer;
 
-            // Add listeners to buttons
             restartLevelButton.onClick.AddListener(RestartLevel);
-            mainMenuButton.onClick.AddListener(ReturnToMainMenu);
+            mainMenuButton.onClick.AddListener(MainMenu);
         }
 
         private void UpdateScore(int score)
@@ -86,18 +91,35 @@ namespace YagizEraslan.EclipsedEcho
             levelCompletedTurnsText.text = $"Turns: {turns}";
             levelCompletedTimeText.text = $"Completed in {Mathf.Round(GameController.Instance.Timer)} seconds";
             levelCompletedBonusText.text = $"Bonus: {bonus}";
-            levelCompletedScoreText.text = $"Score: {finalScore + bonus}";
+            levelCompletedScoreText.text = $"Score: {finalScore}";
         }
 
         private void RestartLevel()
         {
             GameController.Instance.InitializeStartingValues();
-            LevelManager.Instance.RestartCurrentLevel();
+            GameManager.Instance.ShowGameplayPanel();
+            MainMenuManager.Instance.GenerateSelectedLevel();
         }
 
-        private void ReturnToMainMenu()
+        private void MainMenu()
         {
-            GameManager.Instance.ReturnToMainMenu();
+            highScoreText.text = $"High Score: {DataPersistenceManager.Instance.LoadHighScore().ToString()}";
+            GameManager.Instance.ShowMainMenuPanel();
+        }
+
+        private void OnDestroy()
+        {
+            GameManager.Instance.OnGameStart -= StartTimer;
+            GameManager.Instance.OnGameOver -= StopTimer;
+
+            GameController.Instance.OnScoreUpdated -= UpdateScore;
+            GameController.Instance.OnBonusUpdated -= UpdateBonus;
+            GameController.Instance.OnTurnsUpdated -= UpdateTurns;
+            GameController.Instance.OnMatchesUpdated -= UpdateMatches;
+            GameController.Instance.OnTimerUpdated -= UpdateTimer;
+
+            restartLevelButton.onClick.RemoveListener(RestartLevel);
+            mainMenuButton.onClick.RemoveListener(GameManager.Instance.ShowMainMenuPanel);
         }
     }
 }

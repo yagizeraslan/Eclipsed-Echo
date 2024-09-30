@@ -4,6 +4,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace YagizEraslan.EclipsedEcho
 {
@@ -55,6 +56,15 @@ namespace YagizEraslan.EclipsedEcho
         {
             int totalCards = selectedGridSize;
 
+            (int columns, int rows, float cellSize) = CalculateOptimalGridDimensions(totalCards);
+
+            cellSize = Mathf.Clamp(cellSize, minCellSize, maxCellSize);
+
+            ApplyGridLayoutProperties(columns, cellSize);
+        }
+
+        private (int columns, int rows, float cellSize) CalculateOptimalGridDimensions(int totalCards)
+        {
             int columns = 0;
             int rows = 0;
             float cellSize = 0f;
@@ -69,25 +79,29 @@ namespace YagizEraslan.EclipsedEcho
             {
                 int r = Mathf.CeilToInt((float)totalCards / c);
 
-                // Calculate cell size
-                float cellWidth = (gridWidth - ((c - 1) * spacingX)) / c;
-                float cellHeight = (gridHeight - ((r - 1) * spacingY)) / r;
-                float currentCellSize = Mathf.Min(cellWidth, cellHeight);
+                float currentCellSize = CalculateCellSize(c, r, gridWidth, gridHeight, spacingX, spacingY);
 
-                if (currentCellSize >= minCellSize)
+                if (currentCellSize >= minCellSize && currentCellSize > cellSize)
                 {
-                    if (currentCellSize > cellSize)
-                    {
-                        cellSize = currentCellSize;
-                        columns = c;
-                        rows = r;
-                    }
+                    cellSize = currentCellSize;
+                    columns = c;
+                    rows = r;
                 }
             }
 
-            cellSize = Mathf.Clamp(cellSize, minCellSize, maxCellSize);
+            return (columns, rows, cellSize);
+        }
 
-            // Set grid layout properties
+        private float CalculateCellSize(int columns, int rows, float gridWidth, float gridHeight, float spacingX, float spacingY)
+        {
+            float cellWidth = (gridWidth - ((columns - 1) * spacingX)) / columns;
+            float cellHeight = (gridHeight - ((rows - 1) * spacingY)) / rows;
+
+            return Mathf.Min(cellWidth, cellHeight);
+        }
+
+        private void ApplyGridLayoutProperties(int columns, float cellSize)
+        {
             cardGridLayoutGroup.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             cardGridLayoutGroup.constraintCount = columns;
             cardGridLayoutGroup.cellSize = new Vector2(cellSize, cellSize);
