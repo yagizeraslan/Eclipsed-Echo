@@ -17,13 +17,14 @@ namespace YagizEraslan.EclipsedEcho
         public bool IsMatched { get; private set; }
         public bool IsFaceUp { get; private set; }
 
+        private bool isMismatchedAnimationComplete = false;
+
         [SerializeField] private Image frontImage;
         [SerializeField] private Image backImage;
 
         private Animator animator;
         private bool isInteractable = false;
 
-        // Hold AsyncOperationHandles to release assets later
         private AsyncOperationHandle<Sprite> frontSpriteHandle;
         private AsyncOperationHandle<Sprite> backSpriteHandle;
 
@@ -32,6 +33,7 @@ namespace YagizEraslan.EclipsedEcho
         private void Awake()
         {
             animator = GetComponent<Animator>();
+            IsFaceUp = false;
         }
 
         public async Task Initialize(int cardID, string frontSpriteAddress, string backSpriteAddress)
@@ -58,12 +60,12 @@ namespace YagizEraslan.EclipsedEcho
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (!isInteractable || IsMatched || GameController.Instance.IsProcessing)
+            if (!isInteractable || IsMatched || IsFaceUp)
                 return;
 
-            FlipToFrontSide();
             GameController.Instance.CardSelected(this);
         }
+
 
         public void ShowCard()
         {
@@ -77,19 +79,28 @@ namespace YagizEraslan.EclipsedEcho
 
         public void FlipToFrontSide()
         {
-            animator.SetTrigger("FlipFrontSide");
-            SoundManager.Instance.PlayFlipSound();
+            if (!IsFaceUp)
+            {
+                animator.SetTrigger("FlipFrontSide");
+                SoundManager.Instance.PlayFlipSound();
+                IsFaceUp = true; // Set the card as face-up after flipping
+            }
         }
 
         public void FlipToBackSide()
         {
-            animator.SetTrigger("FlipBackSide");
-            SoundManager.Instance.PlayFlipSound();
+            if (IsFaceUp)
+            {
+                animator.SetTrigger("FlipBackSide");
+                SoundManager.Instance.PlayFlipSound();
+                IsFaceUp = false; // Set the card as face-down after flipping back
+            }
         }
 
         public void Match()
         {
-            IsMatched = true;
+            IsMatched = true; // Mark the card as matched
+            IsFaceUp = true;  // Keep the card face-up
             animator.SetTrigger("Match");
             SoundManager.Instance.PlayMatchSound();
         }
@@ -98,6 +109,7 @@ namespace YagizEraslan.EclipsedEcho
         {
             animator.SetTrigger("Mismatch");
             SoundManager.Instance.PlayMismatchSound();
+            IsFaceUp = false; // Ensure the card is considered face-down after mismatch
         }
 
         public void OnFlipAnimationComplete()
@@ -105,7 +117,7 @@ namespace YagizEraslan.EclipsedEcho
             OnFlipComplete?.Invoke(this);
         }
 
-        // New method to release the Addressable assets
+
         public void ReleaseAssets()
         {
             // Release front and back sprites
@@ -121,7 +133,6 @@ namespace YagizEraslan.EclipsedEcho
 
         private void OnDestroy()
         {
-            // Ensure the assets are released when the card is destroyed
             ReleaseAssets();
         }
     }

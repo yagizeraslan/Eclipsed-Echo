@@ -56,7 +56,6 @@ namespace YagizEraslan.EclipsedEcho
         {
             int totalCards = selectedGridSize;
 
-            // Find the best fit for columns and rows
             int columns = 0;
             int rows = 0;
             float cellSize = 0f;
@@ -100,15 +99,13 @@ namespace YagizEraslan.EclipsedEcho
 
         private async Task SpawnCardsAsync()
         {
-            GameController.Instance.SetProcessing(true); // Prevent interaction during initial reveal
+            // Remove this line
+            // GameController.Instance.SetProcessing(true); // Prevent interaction during initial reveal
 
-            // Randomly select a back-side sprite for this game
             selectedBackSideSpriteAddress = backSideCards.backSideSpriteAddresses[UnityEngine.Random.Range(0, backSideCards.backSideSpriteAddresses.Count)];
 
-            // Use the selected card category's sprite addresses
             List<string> frontSideCardSpritesAddressables = new List<string>(selectedCardCategory.cardSpriteAddresses);
 
-            // Generate pairs of card IDs
             List<int> cardIDs = new List<int>();
             int totalPairs = selectedGridSize / 2;
 
@@ -117,16 +114,13 @@ namespace YagizEraslan.EclipsedEcho
             for (int i = 0; i < totalPairs; i++)
             {
                 cardIDs.Add(i);
-                cardIDs.Add(i); // Add each card ID twice for matching pairs
+                cardIDs.Add(i);
             }
 
-            // Shuffle the card IDs
             cardIDs = ShuffleList(cardIDs);
 
-            // Shuffle the front side sprites independently as well
             frontSideCardSpritesAddressables = ShuffleList(frontSideCardSpritesAddressables);
 
-            // Instantiate and initialize all cards
             cards = new List<Card>();
             for (int i = 0; i < cardIDs.Count; i++)
             {
@@ -134,7 +128,7 @@ namespace YagizEraslan.EclipsedEcho
                 Card card = cardObj.GetComponent<Card>();
                 cards.Add(card);
 
-                int cardID = cardIDs[i]; // Get the shuffled card ID
+                int cardID = cardIDs[i];
                 string frontSpriteAddress = frontSideCardSpritesAddressables[cardID % frontSideCardSpritesAddressables.Count];
 
                 await card.Initialize(cardID, frontSpriteAddress, selectedBackSideSpriteAddress);
@@ -142,7 +136,7 @@ namespace YagizEraslan.EclipsedEcho
 
             // Start the cascading flip sequence
             List<Task> flipTasks = new List<Task>();
-            float delayBetweenCards = 100f; // 100 milliseconds between each card's flip
+            float delayBetweenCards = 100f;
             for (int i = 0; i < cards.Count; i++)
             {
                 Card card = cards[i];
@@ -150,16 +144,15 @@ namespace YagizEraslan.EclipsedEcho
                 flipTasks.Add(ShowAndFlipCard(card, delay));
             }
 
-            // Wait for all flip sequences to complete
             await Task.WhenAll(flipTasks);
 
-            // Enable interaction on all cards
             foreach (var card in cards)
             {
                 card.SetInteractable(true);
             }
 
-            GameController.Instance.SetProcessing(false); // Allow player interaction
+            // Remove this line
+            // GameController.Instance.SetProcessing(false); // Allow player interaction
         }
 
         private async Task ShowAndFlipCard(Card card, float delay)
