@@ -48,6 +48,14 @@ namespace YagizEraslan.EclipsedEcho
 
         public void GameOver()
         {
+            StartCoroutine(HandleLevelComplete());
+        }
+
+        private IEnumerator HandleLevelComplete()
+        {
+            yield return new WaitForSeconds(0.5f);
+            SoundManager.Instance.PlayLevelCompletedSound();
+            yield return new WaitForSeconds(0.5f);
             gameplayPanel.SetActive(false);
             levelCompletedPanel.SetActive(true);
             OnGameOver?.Invoke();
