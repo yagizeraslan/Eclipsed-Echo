@@ -9,7 +9,6 @@ namespace YagizEraslan.EclipsedEcho
     public class GameController : MonoSingleton<GameController>
     {
         public UnityAction<int> OnScoreUpdated;
-        public UnityAction<int> OnHighcoreUpdated;
         public UnityAction<int> OnBonusUpdated;
         public UnityAction<int> OnTurnsUpdated;
         public UnityAction<int> OnMatchesUpdated;
@@ -43,7 +42,6 @@ namespace YagizEraslan.EclipsedEcho
             isTiming = false;
 
             OnScoreUpdated?.Invoke(score);
-            OnHighcoreUpdated?.Invoke(DataPersistenceManager.Instance.LoadHighScore());
             OnBonusUpdated?.Invoke(bonus);
             OnTurnsUpdated?.Invoke(turns);
             OnMatchesUpdated?.Invoke(matches);
