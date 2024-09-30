@@ -98,8 +98,10 @@ namespace YagizEraslan.EclipsedEcho
             cardGridLayoutGroup.cellSize = new Vector2(cellSize, cellSize);
         }
 
-        private async void SpawnCardsAsync()
+        private async Task SpawnCardsAsync()
         {
+            GameController.Instance.SetProcessing(true); // Prevent interaction during initial reveal
+
             // Randomly select a back-side sprite for this game
             selectedBackSideSpriteAddress = backSideCards.backSideSpriteAddresses[Random.Range(0, backSideCards.backSideSpriteAddresses.Count)];
 
@@ -121,8 +123,8 @@ namespace YagizEraslan.EclipsedEcho
             // Shuffle the card IDs
             cardIDs = ShuffleList(cardIDs);
 
-            // Instantiate all cards
-            List<Card> cards = new List<Card>();
+            // Instantiate and initialize all cards
+            cards = new List<Card>();
             for (int i = 0; i < cardIDs.Count; i++)
             {
                 GameObject cardObj = Instantiate(cardPrefab, cardGridLayoutGroup.transform);
@@ -135,17 +137,38 @@ namespace YagizEraslan.EclipsedEcho
                 await card.Initialize(cardID, frontSpriteAddress, selectedBackSideSpriteAddress);
             }
 
-            // Show cards one by one
+            // Start the cascading flip sequence
+            List<Task> flipTasks = new List<Task>();
+
+            float delayBetweenCards = 100f; // 100 milliseconds between each card's flip
+            for (int i = 0; i < cards.Count; i++)
+            {
+                Card card = cards[i];
+                float delay = i * delayBetweenCards;
+                flipTasks.Add(ShowAndFlipCard(card, delay));
+            }
+
+            // Wait for all flip sequences to complete
+            await Task.WhenAll(flipTasks);
+
+            // Enable interaction on all cards
             foreach (var card in cards)
             {
-                card.ShowCard(); // Scale from 0 to 1
-                await Task.Delay(100); // Wait 0.1 seconds between each card
-
-                card.FlipToFrontSide(); // Flip to show front side
-                await Task.Delay(1000); // Wait 1 second
-
-                card.FlipToBackSide(); // Flip back to back side
+                card.SetInteractable(true);
             }
+
+            GameController.Instance.SetProcessing(false); // Allow player interaction
+        }
+
+        private async Task ShowAndFlipCard(Card card, float delay)
+        {
+            await Task.Delay((int)delay);
+            card.ShowCard();
+            await Task.Delay(500);
+            card.FlipToFrontSide();
+            await Task.Delay(1500);
+            card.FlipToBackSide();
+            await Task.Delay(500);
         }
 
         private List<T> ShuffleList<T>(List<T> list)
@@ -162,7 +185,6 @@ namespace YagizEraslan.EclipsedEcho
             return list;
         }
 
-        // Additional method to provide GridLayoutGroup reference
         public GridLayoutGroup GetGridLayoutGroup()
         {
             return cardGridLayoutGroup;
