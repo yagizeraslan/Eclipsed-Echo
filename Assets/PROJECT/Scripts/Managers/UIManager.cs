@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.UI;
 
 namespace YagizEraslan.EclipsedEcho
@@ -30,6 +31,7 @@ namespace YagizEraslan.EclipsedEcho
             GameManager.Instance.OnGameOver += StopTimer;
 
             GameController.Instance.OnScoreUpdated += UpdateScore;
+            GameController.Instance.OnBonusUpdated += UpdateBonus;
             GameController.Instance.OnTurnsUpdated += UpdateTurns;
             GameController.Instance.OnMatchesUpdated += UpdateMatches;
             GameController.Instance.OnTimerUpdated += UpdateTimer;
@@ -42,6 +44,11 @@ namespace YagizEraslan.EclipsedEcho
         private void UpdateScore(int score)
         {
             scoreText.text = $": {score}";
+        }
+
+        private void UpdateBonus(int bonus)
+        {
+            levelCompletedBonusText.text = $": {bonus}";
         }
 
         private void UpdateTurns(int turns)
@@ -74,17 +81,12 @@ namespace YagizEraslan.EclipsedEcho
         {
             int finalScore = GameController.Instance.Score;
             int turns = GameController.Instance.Turns;
-            int bonus = CalculateBonus();
+            int bonus = GameController.Instance.Bonus;
 
             levelCompletedTurnsText.text = $"Turns: {turns}";
             levelCompletedTimeText.text = $"Completed in {Mathf.Round(GameController.Instance.Timer)} seconds";
             levelCompletedBonusText.text = $"Bonus: {bonus}";
             levelCompletedScoreText.text = $"Score: {finalScore + bonus}";
-        }
-
-        private int CalculateBonus()
-        {
-            return 0;
         }
 
         private void RestartLevel()

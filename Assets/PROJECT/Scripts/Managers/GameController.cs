@@ -8,6 +8,7 @@ namespace YagizEraslan.EclipsedEcho
     public class GameController : MonoSingleton<GameController>
     {
         public UnityAction<int> OnScoreUpdated;
+        public UnityAction<int> OnBonusUpdated;
         public UnityAction<int> OnTurnsUpdated;
         public UnityAction<int> OnMatchesUpdated;
         public UnityAction<float> OnTimerUpdated;
@@ -15,6 +16,7 @@ namespace YagizEraslan.EclipsedEcho
         private List<Card> flippedCards = new List<Card>();
 
         private int score;
+        private int bonus;
         private int turns;
         private int matches;
         private float timer;
@@ -22,6 +24,7 @@ namespace YagizEraslan.EclipsedEcho
         private float lastDisplayedTime = 0f;
 
         public int Score => score;
+        public int Bonus => bonus;
         public int Turns => turns;
         public int Matches => matches;
         public float Timer => timer;
@@ -31,12 +34,14 @@ namespace YagizEraslan.EclipsedEcho
         public void InitializeStartingValues()
         {
             score = 0;
+            bonus = 0;
             turns = 0;
             matches = 0;
             timer = 0f;
             isTiming = false;
 
             OnScoreUpdated?.Invoke(score);
+            OnBonusUpdated?.Invoke(bonus);
             OnTurnsUpdated?.Invoke(turns);
             OnMatchesUpdated?.Invoke(matches);
             OnTimerUpdated?.Invoke(timer);
@@ -129,8 +134,37 @@ namespace YagizEraslan.EclipsedEcho
 
             if (CheckIfGameCompleted())
             {
+                CalculateBonusScore(LevelManager.Instance.TotalPairs / 2, turns, matches * 100, turns * 10, Mathf.FloorToInt(timer));
                 GameManager.Instance.GameOver();
             }
+        }
+
+        private int CalculateBonusScore(int totalImages, int turns, int baseScore, int turnPenalty, int timePenalty)
+        {
+            int bonusMultiplier = 2;
+
+            if (totalImages == turns)
+            {
+                bonus = (baseScore - turnPenalty - timePenalty) * (bonusMultiplier - 1);
+                OnBonusUpdated?.Invoke(bonus);
+            }
+            else if (totalImages + 1 == turns)
+            {
+                bonus = 200;
+                OnBonusUpdated?.Invoke(bonus);
+            }
+            else if (totalImages + 2 == turns)
+            {
+                bonus = 100;
+                OnBonusUpdated?.Invoke(bonus);
+            }
+            else
+            {
+                bonus = 0;
+                OnBonusUpdated?.Invoke(bonus);
+            }
+
+            return bonus;
         }
 
         private bool CheckIfGameCompleted()
