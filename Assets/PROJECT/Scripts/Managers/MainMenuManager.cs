@@ -8,13 +8,16 @@ namespace YagizEraslan.EclipsedEcho
 {
     public class MainMenuManager : MonoSingleton<MainMenuManager>
     {
-        [SerializeField] private TMP_Dropdown layoutDropdown;
         [SerializeField] private TMP_Dropdown categoryDropdown;
+        [SerializeField] private TMP_Dropdown layoutDropdown;
         [SerializeField] private Button playButton;
 
         private LevelManager levelManager;
         private List<int> availableGridSizes = new List<int>();
         private List<CardCategory> cardCategories;
+
+        public List<CardCategory> CardCategories => cardCategories;
+        public TMP_Dropdown CategoryDropdown => categoryDropdown;
 
         private void Start()
         {
@@ -83,16 +86,23 @@ namespace YagizEraslan.EclipsedEcho
 
         private void OnPlayButtonClicked()
         {
+            DataPersistenceManager.Instance.SaveSelectedLevelType(availableGridSizes[layoutDropdown.value], categoryDropdown.value);
             GenerateSelectedLevel();
         }
 
         public void GenerateSelectedLevel()
         {
             GameController.Instance.InitializeStartingValues();
-
             levelManager.SetSelectedGridSize(availableGridSizes[layoutDropdown.value]);
-            levelManager.SetSelectedCardCategory(cardCategories[categoryDropdown.value]);
+            levelManager.SetSelectedCardCategory(categoryDropdown.value);
+            GameManager.Instance.ShowGameplayPanel();
+        }
 
+        public void GenerateCustomLevel(int gridSize, int cardCategoryIndex)
+        {
+            GameController.Instance.InitializeStartingValues();
+            levelManager.SetSelectedGridSize(gridSize);
+            levelManager.SetSelectedCardCategory(cardCategoryIndex);
             GameManager.Instance.ShowGameplayPanel();
         }
 

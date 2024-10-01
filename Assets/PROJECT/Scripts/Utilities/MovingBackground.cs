@@ -8,7 +8,7 @@ namespace YagizEraslan.EclipsedEcho
     public class MovingBackground : MonoBehaviour
     {
         private RawImage backgroundImage;
-        private float x = 0.01f, y = 0.01f;
+        private float x = 0.02f, y = 0.02f;
 
         private float referenceWidth = 1368f;
         private float referenceHeight = 2960f;

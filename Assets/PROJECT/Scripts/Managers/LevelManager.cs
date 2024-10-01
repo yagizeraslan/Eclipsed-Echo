@@ -29,6 +29,41 @@ namespace YagizEraslan.EclipsedEcho
             return cardCategories;
         }
 
+        public List<CardData> GetCardsData()
+        {
+            List<CardData> cardDataList = new List<CardData>();
+            foreach (var card in cards)
+            {
+                cardDataList.Add(new CardData
+                {
+                    cardID = card.CardID,
+                    isFlipped = card.IsFaceUp,
+                    isMatched = card.IsMatched
+                });
+            }
+            return cardDataList;
+        }
+
+        public void LoadCardsFromState(List<CardData> cardDataList)
+        {
+            for (int i = 0; i < cardDataList.Count; i++)
+            {
+                CardData cardData = cardDataList[i];
+                Card card = cards.FirstOrDefault(c => c.CardID == cardData.cardID);
+                if (card != null)
+                {
+                    if (cardData.isFlipped)
+                    {
+                        card.FlipToFrontSide();
+                    }
+                    if (cardData.isMatched)
+                    {
+                        card.Match();
+                    }
+                }
+            }
+        }
+
         public int TotalPairs { get; private set; }
 
         private void Start()
@@ -36,9 +71,16 @@ namespace YagizEraslan.EclipsedEcho
             GameManager.Instance.OnGameStart += SetupLevel;
         }
 
-        public void SetSelectedCardCategory(CardCategory category)
+        public void SetSelectedCardCategory(int index)
         {
-            selectedCardCategory = category;
+            if (index >= 0 && index < cardCategories.Count)
+            {
+                selectedCardCategory = cardCategories[index];
+            }
+            else
+            {
+                Debug.LogError("Invalid index for card category.");
+            }
         }
 
         public void SetSelectedGridSize(int gridSize)

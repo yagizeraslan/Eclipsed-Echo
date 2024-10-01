@@ -22,7 +22,11 @@ namespace YagizEraslan.EclipsedEcho
         [SerializeField] private TextMeshProUGUI levelCompletedBonusText;
         [SerializeField] private TextMeshProUGUI levelCompletedScoreText;
 
-        [Header("Buttons")]
+        [Header("Level Completed Buttons")]
+        [SerializeField] private Button yesButton;
+        [SerializeField] private Button noButton;
+
+        [Header("Level Completed Buttons")]
         [SerializeField] private Button restartLevelButton;
         [SerializeField] private Button mainMenuButton;
 
@@ -42,6 +46,9 @@ namespace YagizEraslan.EclipsedEcho
             GameController.Instance.OnMatchesUpdated += UpdateMatches;
             GameController.Instance.OnTimerUpdated += UpdateTimer;
 
+            yesButton.onClick.AddListener(DataPersistenceManager.Instance.LoadLevel);
+            noButton.onClick.AddListener(DataPersistenceManager.Instance.DeclineLoadLevel);
+            
             restartLevelButton.onClick.AddListener(RestartLevel);
             mainMenuButton.onClick.AddListener(MainMenu);
         }
@@ -96,9 +103,10 @@ namespace YagizEraslan.EclipsedEcho
 
         private void RestartLevel()
         {
-            GameController.Instance.InitializeStartingValues();
-            GameManager.Instance.ShowGameplayPanel();
-            MainMenuManager.Instance.GenerateSelectedLevel();
+            int selectedGridSize = DataPersistenceManager.Instance.SelectedGridSize;
+            int selectedCategoryKey = DataPersistenceManager.Instance.SelectedCategoryKey;
+            MainMenuManager.Instance.GenerateCustomLevel(selectedGridSize, selectedCategoryKey);
+            Debug.Log($"Grid Size: { selectedGridSize }, Category Type: { selectedCategoryKey }");
         }
 
         private void MainMenu()
