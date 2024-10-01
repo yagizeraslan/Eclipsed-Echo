@@ -13,36 +13,67 @@ namespace YagizEraslan.EclipsedEcho
         public int SelectedGridSize => PlayerPrefs.GetInt(SELECTED_GRID_KEY);
         public int SelectedCategoryKey => PlayerPrefs.GetInt(SELECTED_CATEGORY_KEY);
 
-        #region Save/Load/Delete Level Data
+        #region PlayerPrefs Utilities
 
-        public void SaveSelectedLevelType(int selectedGridSize, int selectedCategoryName)
+        private void SaveInt(string key, int value)
         {
-            PlayerPrefs.SetInt(SELECTED_GRID_KEY, selectedGridSize);
-            PlayerPrefs.SetInt(SELECTED_CATEGORY_KEY, selectedCategoryName);
+            PlayerPrefs.SetInt(key, value);
             PlayerPrefs.Save();
         }
 
-        public bool LoadSelectedLevelType(out int selectedGridSize, out int selectedCategoryName)
+        private int LoadInt(string key, int defaultValue = 0)
+        {
+            return PlayerPrefs.HasKey(key) ? PlayerPrefs.GetInt(key) : defaultValue;
+        }
+
+        private void SaveString(string key, string value)
+        {
+            PlayerPrefs.SetString(key, value);
+            PlayerPrefs.Save();
+        }
+
+        private string LoadString(string key, string defaultValue = "")
+        {
+            return PlayerPrefs.HasKey(key) ? PlayerPrefs.GetString(key) : defaultValue;
+        }
+
+        private void DeleteKey(string key)
+        {
+            if (PlayerPrefs.HasKey(key))
+            {
+                PlayerPrefs.DeleteKey(key);
+                PlayerPrefs.Save();
+            }
+        }
+
+        #endregion
+
+        #region Save/Load/Delete Level Data
+
+        public void SaveSelectedLevelType(int selectedGridSize, int selectedCategoryKey)
+        {
+            SaveInt(SELECTED_GRID_KEY, selectedGridSize);
+            SaveInt(SELECTED_CATEGORY_KEY, selectedCategoryKey);
+        }
+
+        public bool LoadSelectedLevelType(out int selectedGridSize, out int selectedCategoryKey)
         {
             if (PlayerPrefs.HasKey(SELECTED_GRID_KEY) && PlayerPrefs.HasKey(SELECTED_CATEGORY_KEY))
             {
-                selectedGridSize = PlayerPrefs.GetInt(SELECTED_GRID_KEY);
-                selectedCategoryName = PlayerPrefs.GetInt(SELECTED_CATEGORY_KEY);
+                selectedGridSize = LoadInt(SELECTED_GRID_KEY);
+                selectedCategoryKey = LoadInt(SELECTED_CATEGORY_KEY);
                 return true;
             }
-            else
-            {
-                selectedGridSize = 0;
-                selectedCategoryName = 0;
-                return false;
-            }
+
+            selectedGridSize = 0;
+            selectedCategoryKey = 0;
+            return false;
         }
 
-        public void DeleteSelectedGridType()
+        public void DeleteSelectedLevelData()
         {
-            PlayerPrefs.DeleteKey(SELECTED_GRID_KEY);
-            PlayerPrefs.DeleteKey(SELECTED_CATEGORY_KEY);
-            PlayerPrefs.Save();
+            DeleteKey(SELECTED_GRID_KEY);
+            DeleteKey(SELECTED_CATEGORY_KEY);
         }
 
         #endregion
@@ -51,24 +82,21 @@ namespace YagizEraslan.EclipsedEcho
 
         public void SaveHighScore(int highScore)
         {
-            int currentHighScore = PlayerPrefs.GetInt(HIGH_SCORE_KEY);
-            if (highScore > currentHighScore) 
+            int currentHighScore = LoadInt(HIGH_SCORE_KEY);
+            if (highScore > currentHighScore)
             {
-                PlayerPrefs.SetInt(HIGH_SCORE_KEY, highScore);
-                PlayerPrefs.Save();
+                SaveInt(HIGH_SCORE_KEY, highScore);
             }
         }
 
         public int LoadHighScore()
         {
-            if (PlayerPrefs.HasKey(HIGH_SCORE_KEY))
-            {
-                return PlayerPrefs.GetInt(HIGH_SCORE_KEY);
-            }
-            else
-            {
-                return 0;
-            }
+            return LoadInt(HIGH_SCORE_KEY);
+        }
+
+        public void DeleteHighScore()
+        {
+            DeleteKey(HIGH_SCORE_KEY);
         }
 
         #endregion
@@ -83,32 +111,18 @@ namespace YagizEraslan.EclipsedEcho
                 score = score,
                 timer = timer,
                 turns = turns,
-                matches = matches,
+                matches = matches
             };
 
             string json = JsonUtility.ToJson(gameState);
-            PlayerPrefs.SetString(GAME_STATE_KEY, json);
-            PlayerPrefs.Save();
-        }
-
-        public void LoadLevel()
-        {
-            LoadGameState();
-            GameManager.Instance.ShowGameplayPanel();
-            GameManager.Instance.ResumeGame();
-        }
-
-        public void DeclineLoadLevel()
-        {
-            ClearSavedGame();
-            GameManager.Instance.ShowMainMenuPanel();
+            SaveString(GAME_STATE_KEY, json);
         }
 
         public GameState LoadGameState()
         {
             if (PlayerPrefs.HasKey(GAME_STATE_KEY))
             {
-                string json = PlayerPrefs.GetString(GAME_STATE_KEY);
+                string json = LoadString(GAME_STATE_KEY);
                 return JsonUtility.FromJson<GameState>(json);
             }
             return null;
@@ -116,8 +130,7 @@ namespace YagizEraslan.EclipsedEcho
 
         public void ClearSavedGame()
         {
-            PlayerPrefs.DeleteKey(GAME_STATE_KEY);
-            PlayerPrefs.Save();
+            DeleteKey(GAME_STATE_KEY);
         }
 
         public bool HasSavedGame()
@@ -126,14 +139,26 @@ namespace YagizEraslan.EclipsedEcho
         }
 
         #endregion
-    }
 
-    [System.Serializable]
-    public class CardData
-    {
-        public int cardID;
-        public bool isFlipped;
-        public bool isMatched;
+        #region Level Load/Resume Actions
+
+        public void LoadLevel()
+        {
+            if (HasSavedGame())
+            {
+                LoadGameState();
+                GameManager.Instance.ShowGameplayPanel();
+                GameManager.Instance.ResumeGame();
+            }
+        }
+
+        public void DeclineLoadLevel()
+        {
+            ClearSavedGame();
+            GameManager.Instance.ShowMainMenuPanel();
+        }
+
+        #endregion
     }
 
     [System.Serializable]
