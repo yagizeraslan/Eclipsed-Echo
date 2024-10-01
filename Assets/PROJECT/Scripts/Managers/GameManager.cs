@@ -18,9 +18,8 @@ namespace YagizEraslan.EclipsedEcho
         private void Start()
         {
             Application.targetFrameRate = 60;
-
             ShowMainMenuPanel();
-            //CheckForSavedGame();
+            CheckForSavedGame();
         }
 
         public void ShowMainMenuPanel()
@@ -31,13 +30,13 @@ namespace YagizEraslan.EclipsedEcho
             levelCompletedPanel.SetActive(false);
         }
 
-        //private void CheckForSavedGame()
-        //{
-        //    if (DataPersistenceManager.Instance.HasSavedGame())
-        //    {
-        //        resumePanel.SetActive(true);
-        //    }
-        //}
+        private void CheckForSavedGame()
+        {
+            if (DataPersistenceManager.Instance.HasSavedGame())
+            {
+                resumePanel.SetActive(true);
+            }
+        }
 
         public void ShowGameplayPanel()
         {
@@ -66,16 +65,12 @@ namespace YagizEraslan.EclipsedEcho
 
         public void ResumeGame()
         {
-            resumePanel.SetActive(false);
-            gameplayPanel.SetActive(true);
-            OnGameStart?.Invoke();
+            var gameState = DataPersistenceManager.Instance.LoadGameState();
+            if (gameState != null)
+            {
+                GameController.Instance.LoadGameFromState(gameState);
+                ShowGameplayPanel();
+            }
         }
-
-        
-
-        //public void RestartGame()
-        //{
-        //    DataPersistenceManager.Instance.SaveSelectedGridType();
-        //}
     }
 }

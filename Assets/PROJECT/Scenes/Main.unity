@@ -1598,8 +1598,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ba1ca40bc63d2a479d1d94c2a2ad695, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  layoutDropdown: {fileID: 439799349}
   categoryDropdown: {fileID: 1101377588}
+  layoutDropdown: {fileID: 439799349}
   playButton: {fileID: 98338009}
 --- !u!1 &283027215
 GameObject:
@@ -3423,6 +3423,8 @@ MonoBehaviour:
   levelCompletedTimeText: {fileID: 535957138}
   levelCompletedBonusText: {fileID: 160569940}
   levelCompletedScoreText: {fileID: 1067187127}
+  yesButton: {fileID: 1172573193}
+  noButton: {fileID: 340404356}
   restartLevelButton: {fileID: 1665370825}
   mainMenuButton: {fileID: 1441125612}
 --- !u!4 &611479868

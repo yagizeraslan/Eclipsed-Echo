@@ -114,6 +114,7 @@ namespace YagizEraslan.EclipsedEcho
 
                 firstCard.Match();
                 secondCard.Match();
+                SaveGame();
             }
             else
             {
@@ -129,6 +130,8 @@ namespace YagizEraslan.EclipsedEcho
                 secondCard.FlipToBackSide();
             }
 
+            SaveGame();
+
             firstCard.SetInteractable(true);
             secondCard.SetInteractable(true);
 
@@ -136,6 +139,7 @@ namespace YagizEraslan.EclipsedEcho
             {
                 score += CalculateBonusScore(LevelManager.Instance.TotalPairs / 2, turns, matches * 100, turns * 10, Mathf.FloorToInt(timer));
                 DataPersistenceManager.Instance.SaveHighScore(score);
+                DataPersistenceManager.Instance.ClearSavedGame();
                 GameManager.Instance.GameOver();
             }
         }
@@ -183,6 +187,30 @@ namespace YagizEraslan.EclipsedEcho
         {
             int totalPairs = LevelManager.Instance.TotalPairs;
             return matches >= totalPairs;
+        }
+
+        // Saving game state
+        public void SaveGame()
+        {
+            List<CardData> cardData = LevelManager.Instance.GetCardsData();
+            DataPersistenceManager.Instance.SaveGameState(cardData, score, timer, turns, matches);
+        }
+
+        // Loading game state
+        public void LoadGameFromState(GameState gameState)
+        {
+            LevelManager.Instance.LoadCardsFromState(gameState.cardData);
+            score = gameState.score;
+            turns = gameState.turns;
+            matches = gameState.matches;
+            timer = gameState.timer;
+
+            OnScoreUpdated?.Invoke(score);
+            OnTurnsUpdated?.Invoke(turns);
+            OnMatchesUpdated?.Invoke(matches);
+            OnTimerUpdated?.Invoke(timer);
+
+            StartTimer();
         }
 
         private void OnDestroy()
