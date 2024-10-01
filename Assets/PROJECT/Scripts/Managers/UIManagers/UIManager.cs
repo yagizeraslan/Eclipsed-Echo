@@ -85,7 +85,7 @@ namespace YagizEraslan.EclipsedEcho
         {
             int selectedGridSize = DataPersistenceManager.Instance.SelectedGridSize;
             int selectedCategoryKey = DataPersistenceManager.Instance.SelectedCategoryKey;
-            MainMenuManager.Instance.GenerateCustomLevel(selectedGridSize, selectedCategoryKey);
+            MainMenuManager.Instance.GenerateLevel(selectedGridSize, selectedCategoryKey);
         }
 
         private void MainMenu()

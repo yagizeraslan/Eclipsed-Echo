@@ -59,15 +59,15 @@ namespace YagizEraslan.EclipsedEcho
             {
                 bonus = (baseScore - turnPenalty - timePenalty) * bonusMultiplier;
             }
-            else if (totalPairs + 1 == turns)
+            else if (totalPairs == turns + 2)
             {
                 bonus = 200;
             }
-            else if (totalPairs + 2 == turns)
+            else if (totalPairs == turns + 4)
             {
                 bonus = 100;
             }
-            else if (totalPairs + 3 == turns)
+            else if (totalPairs == turns + 6)
             {
                 bonus = 50;
             }

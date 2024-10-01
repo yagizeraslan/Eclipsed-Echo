@@ -87,18 +87,10 @@ namespace YagizEraslan.EclipsedEcho
         private void OnPlayButtonClicked()
         {
             DataPersistenceManager.Instance.SaveSelectedLevelType(availableGridSizes[layoutDropdown.value], categoryDropdown.value);
-            GenerateSelectedLevel();
+            GenerateLevel(availableGridSizes[layoutDropdown.value], categoryDropdown.value);
         }
 
-        public void GenerateSelectedLevel()
-        {
-            GameController.Instance.InitializeStartingValues();
-            levelManager.SetSelectedGridSize(availableGridSizes[layoutDropdown.value]);
-            levelManager.SetSelectedCardCategory(categoryDropdown.value);
-            GameManager.Instance.ShowGameplayPanel();
-        }
-
-        public void GenerateCustomLevel(int gridSize, int cardCategoryIndex)
+        public void GenerateLevel(int gridSize, int cardCategoryIndex)
         {
             GameController.Instance.InitializeStartingValues();
             levelManager.SetSelectedGridSize(gridSize);

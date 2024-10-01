@@ -1,4 +1,4 @@
-using System.Collections;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -19,7 +19,7 @@ namespace YagizEraslan.EclipsedEcho
 
         protected override void Awake()
         {
-            base.Awake(); // Ensure MonoSingleton Awake method is called
+            base.Awake();
             ScoreManager = gameObject.AddComponent<ScoreManager>();
             TimerManager = gameObject.AddComponent<TimerManager>();
             CardManager = gameObject.AddComponent<CardManager>();
@@ -28,6 +28,7 @@ namespace YagizEraslan.EclipsedEcho
         private void Start()
         {
             Application.targetFrameRate = 60;
+
             ShowMainMenuPanel();
             CheckForSavedGame();
 
@@ -59,17 +60,18 @@ namespace YagizEraslan.EclipsedEcho
             OnGameStart?.Invoke();
         }
 
-        public void GameOver()
+        public async Task GameOver()
         {
-            StartCoroutine(HandleLevelComplete());
+            await HandleLevelCompleteAsync();
         }
 
-        private IEnumerator HandleLevelComplete()
+        private async Task HandleLevelCompleteAsync()
         {
             UIManager.Instance.UpdateLevelCompletedUI();
-            yield return new WaitForSeconds(0.5f);
+            await Task.Delay(500);
             SoundManager.Instance.PlayLevelCompletedSound();
-            yield return new WaitForSeconds(0.5f);
+            await Task.Delay(500);
+
             LevelManager.Instance.ClearGrid();
             gameplayPanel.SetActive(false);
             levelCompletedPanel.SetActive(true);
