@@ -1,5 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace YagizEraslan.EclipsedEcho
@@ -8,7 +8,7 @@ namespace YagizEraslan.EclipsedEcho
     {
         private List<Card> flippedCards = new List<Card>();
 
-        public void CardSelected(Card card)
+        public async Task CardSelected(Card card)
         {
             if (card.IsMatched || card.IsFaceUp)
             {
@@ -20,16 +20,16 @@ namespace YagizEraslan.EclipsedEcho
 
             if (flippedCards.Count == 2)
             {
-                StartCoroutine(CompareFlippedCards(flippedCards[0], flippedCards[1]));
+                await CompareFlippedCards(flippedCards[0], flippedCards[1]);
                 flippedCards.Clear();
             }
         }
 
-        private IEnumerator CompareFlippedCards(Card firstCard, Card secondCard)
+        private async Task CompareFlippedCards(Card firstCard, Card secondCard)
         {
             DisableCardsInteraction(firstCard, secondCard);
 
-            yield return new WaitForSeconds(0.5f);
+            await Task.Delay(500);
 
             GameManager.Instance.ScoreManager.IncrementTurns();
 
@@ -40,7 +40,10 @@ namespace YagizEraslan.EclipsedEcho
             else
             {
                 HandleMismatchingCards(firstCard, secondCard);
-                yield return new WaitForSeconds(1f);
+
+                // Wait for 1 second before flipping back
+                await Task.Delay(1000);
+
                 firstCard.FlipToBackSide();
                 secondCard.FlipToBackSide();
             }
@@ -60,7 +63,7 @@ namespace YagizEraslan.EclipsedEcho
                 GameManager.Instance.ScoreManager.UpdateScore(bonusScore);
                 DataPersistenceManager.Instance.SaveHighScore(GameManager.Instance.ScoreManager.Score);
                 DataPersistenceManager.Instance.ClearSavedGame();
-                GameManager.Instance.GameOver();
+                await GameManager.Instance.GameOver();
             }
         }
 
