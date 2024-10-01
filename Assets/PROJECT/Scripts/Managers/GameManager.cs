@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -7,19 +6,32 @@ namespace YagizEraslan.EclipsedEcho
 {
     public class GameManager : MonoSingleton<GameManager>
     {
+        public ScoreManager ScoreManager { get; private set; }
+        public TimerManager TimerManager { get; private set; }
+        public CardManager CardManager { get; private set; }
+
         public UnityAction OnGameStart;
-        public UnityAction OnGameOver;
 
         [SerializeField] private GameObject mainMenuPanel;
         [SerializeField] private GameObject resumePanel;
         [SerializeField] private GameObject gameplayPanel;
         [SerializeField] private GameObject levelCompletedPanel;
 
+        protected override void Awake()
+        {
+            base.Awake(); // Ensure MonoSingleton Awake method is called
+            ScoreManager = gameObject.AddComponent<ScoreManager>();
+            TimerManager = gameObject.AddComponent<TimerManager>();
+            CardManager = gameObject.AddComponent<CardManager>();
+        }
+
         private void Start()
         {
             Application.targetFrameRate = 60;
             ShowMainMenuPanel();
             CheckForSavedGame();
+
+            OnGameStart?.Invoke(); // Invoke the event when the game starts
         }
 
         public void ShowMainMenuPanel()
@@ -54,23 +66,24 @@ namespace YagizEraslan.EclipsedEcho
 
         private IEnumerator HandleLevelComplete()
         {
+            UIManager.Instance.UpdateLevelCompletedUI();
             yield return new WaitForSeconds(0.5f);
             SoundManager.Instance.PlayLevelCompletedSound();
             yield return new WaitForSeconds(0.5f);
             LevelManager.Instance.ClearGrid();
             gameplayPanel.SetActive(false);
             levelCompletedPanel.SetActive(true);
-            OnGameOver?.Invoke();
         }
 
         public void ResumeGame()
         {
-            var gameState = DataPersistenceManager.Instance.LoadGameState();
-            if (gameState != null)
-            {
-                GameController.Instance.LoadGameFromState(gameState);
-                ShowGameplayPanel();
-            }
+            GameController.Instance.LoadGameFromState(DataPersistenceManager.Instance.LoadGameState());
+            ShowGameplayPanel();
+        }
+
+        public void SaveGame()
+        {
+            GameController.Instance.SaveGame();
         }
     }
 }
