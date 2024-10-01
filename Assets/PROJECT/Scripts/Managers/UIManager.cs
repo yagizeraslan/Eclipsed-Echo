@@ -1,9 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
-using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.UI;
+using TMPro;
 
 namespace YagizEraslan.EclipsedEcho
 {
@@ -32,23 +29,17 @@ namespace YagizEraslan.EclipsedEcho
 
         private void Start()
         {
-            if (DataPersistenceManager.Instance.LoadHighScore().ToString() != null) 
-            {
-                highScoreText.text = $"High Score: {DataPersistenceManager.Instance.LoadHighScore().ToString()}";
-            }
+            highScoreText.text = $"High Score: {DataPersistenceManager.Instance.LoadHighScore().ToString()}";
 
-            GameManager.Instance.OnGameStart += StartTimer;
-            GameManager.Instance.OnGameOver += StopTimer;
-
-            GameController.Instance.OnScoreUpdated += UpdateScore;
-            GameController.Instance.OnBonusUpdated += UpdateBonus;
-            GameController.Instance.OnTurnsUpdated += UpdateTurns;
-            GameController.Instance.OnMatchesUpdated += UpdateMatches;
-            GameController.Instance.OnTimerUpdated += UpdateTimer;
+            GameManager.Instance.ScoreManager.OnScoreUpdated += UpdateScore;
+            GameManager.Instance.ScoreManager.OnBonusUpdated += UpdateBonus;
+            GameManager.Instance.ScoreManager.OnTurnsUpdated += UpdateTurns;
+            GameManager.Instance.ScoreManager.OnMatchesUpdated += UpdateMatches;
+            GameManager.Instance.TimerManager.OnTimerUpdated += UpdateTimer;
 
             yesButton.onClick.AddListener(DataPersistenceManager.Instance.LoadLevel);
             noButton.onClick.AddListener(DataPersistenceManager.Instance.DeclineLoadLevel);
-            
+
             restartLevelButton.onClick.AddListener(RestartLevel);
             mainMenuButton.onClick.AddListener(MainMenu);
         }
@@ -78,25 +69,14 @@ namespace YagizEraslan.EclipsedEcho
             timerText.text = $": {timer.ToString("F1")}";
         }
 
-        private void StartTimer()
+        public void UpdateLevelCompletedUI()
         {
-            GameController.Instance.StartTimer();
-        }
-
-        private void StopTimer()
-        {
-            GameController.Instance.StopTimer();
-            UpdateLevelCompletedUI();
-        }
-
-        private void UpdateLevelCompletedUI()
-        {
-            int finalScore = GameController.Instance.Score;
-            int turns = GameController.Instance.Turns;
-            int bonus = GameController.Instance.Bonus;
+            int finalScore = ScoreManager.Instance.Score;
+            int turns = ScoreManager.Instance.Turns;
+            int bonus = ScoreManager.Instance.Bonus;
 
             levelCompletedTurnsText.text = $"Turns: {turns}";
-            levelCompletedTimeText.text = $"Completed in {Mathf.Round(GameController.Instance.Timer)} seconds";
+            levelCompletedTimeText.text = $"Completed in {Mathf.Round(TimerManager.Instance.Timer)} seconds";
             levelCompletedBonusText.text = $"Bonus: {bonus}";
             levelCompletedScoreText.text = $"Score: {finalScore}";
         }
@@ -106,7 +86,6 @@ namespace YagizEraslan.EclipsedEcho
             int selectedGridSize = DataPersistenceManager.Instance.SelectedGridSize;
             int selectedCategoryKey = DataPersistenceManager.Instance.SelectedCategoryKey;
             MainMenuManager.Instance.GenerateCustomLevel(selectedGridSize, selectedCategoryKey);
-            Debug.Log($"Grid Size: { selectedGridSize }, Category Type: { selectedCategoryKey }");
         }
 
         private void MainMenu()
@@ -117,17 +96,17 @@ namespace YagizEraslan.EclipsedEcho
 
         private void OnDestroy()
         {
-            GameManager.Instance.OnGameStart -= StartTimer;
-            GameManager.Instance.OnGameOver -= StopTimer;
+            GameManager.Instance.ScoreManager.OnScoreUpdated -= UpdateScore;
+            GameManager.Instance.ScoreManager.OnBonusUpdated -= UpdateBonus;
+            GameManager.Instance.ScoreManager.OnTurnsUpdated -= UpdateTurns;
+            GameManager.Instance.ScoreManager.OnMatchesUpdated -= UpdateMatches;
+            GameManager.Instance.TimerManager.OnTimerUpdated -= UpdateTimer;
 
-            GameController.Instance.OnScoreUpdated -= UpdateScore;
-            GameController.Instance.OnBonusUpdated -= UpdateBonus;
-            GameController.Instance.OnTurnsUpdated -= UpdateTurns;
-            GameController.Instance.OnMatchesUpdated -= UpdateMatches;
-            GameController.Instance.OnTimerUpdated -= UpdateTimer;
+            yesButton.onClick.RemoveListener(DataPersistenceManager.Instance.LoadLevel);
+            noButton.onClick.RemoveListener(DataPersistenceManager.Instance.DeclineLoadLevel);
 
             restartLevelButton.onClick.RemoveListener(RestartLevel);
-            mainMenuButton.onClick.RemoveListener(GameManager.Instance.ShowMainMenuPanel);
+            mainMenuButton.onClick.RemoveListener(MainMenu);
         }
     }
 }

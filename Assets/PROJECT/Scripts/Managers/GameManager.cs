@@ -31,7 +31,7 @@ namespace YagizEraslan.EclipsedEcho
             ShowMainMenuPanel();
             CheckForSavedGame();
 
-            OnGameStart?.Invoke(); // Invoke the event when the game starts
+            OnGameStart?.Invoke();
         }
 
         public void ShowMainMenuPanel()

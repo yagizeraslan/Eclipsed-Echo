@@ -1,12 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.EventSystems;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 using System.Threading.Tasks;
-using UnityEngine.Events;
-using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace YagizEraslan.EclipsedEcho
 {
@@ -17,8 +14,6 @@ namespace YagizEraslan.EclipsedEcho
         public bool IsMatched { get; private set; }
         public bool IsFaceUp { get; private set; }
 
-        private bool isMismatchedAnimationComplete = false;
-
         [SerializeField] private Image frontImage;
         [SerializeField] private Image backImage;
 
@@ -28,12 +23,15 @@ namespace YagizEraslan.EclipsedEcho
         private AsyncOperationHandle<Sprite> frontSpriteHandle;
         private AsyncOperationHandle<Sprite> backSpriteHandle;
 
-        public UnityAction<Card> OnFlipComplete;
-
         private void Awake()
         {
             animator = GetComponent<Animator>();
             IsFaceUp = false;
+        }
+
+        private bool IsClickable()
+        {
+            return isInteractable && !IsMatched && !IsFaceUp;
         }
 
         public async Task Initialize(int cardID, string frontSpriteAddress, string backSpriteAddress)
@@ -43,13 +41,19 @@ namespace YagizEraslan.EclipsedEcho
             // Load sprites asynchronously and store their handles
             frontSpriteHandle = Addressables.LoadAssetAsync<Sprite>(frontSpriteAddress);
             await frontSpriteHandle.Task;
+
+            if (frontSpriteHandle.Status != AsyncOperationStatus.Succeeded)
+            {
+                Debug.LogError($"Failed to load sprite at {frontSpriteAddress}");
+                return;
+            }
+
             frontImage.sprite = frontSpriteHandle.Result;
 
             backSpriteHandle = Addressables.LoadAssetAsync<Sprite>(backSpriteAddress);
             await backSpriteHandle.Task;
             backImage.sprite = backSpriteHandle.Result;
 
-            // Start in ResetCard state
             animator.Play("ResetCard", -1, 0f);
         }
 
@@ -60,21 +64,8 @@ namespace YagizEraslan.EclipsedEcho
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (!isInteractable || IsMatched || IsFaceUp)
-                return;
-
+            if (!IsClickable()) return;
             GameController.Instance.CardSelected(this);
-        }
-
-
-        public void ShowCard()
-        {
-            animator.SetTrigger("ShowCard");
-        }
-
-        public void HideCard()
-        {
-            animator.SetTrigger("HideCard");
         }
 
         public void FlipToFrontSide()
@@ -112,15 +103,14 @@ namespace YagizEraslan.EclipsedEcho
             IsFaceUp = false;
         }
 
-        public void OnFlipAnimationComplete()
+        public void ShowCard()
         {
-            OnFlipComplete?.Invoke(this);
+            animator.SetTrigger("ShowCard");
         }
 
-
-        public void ReleaseAssets()
+        private void OnDestroy()
         {
-            // Release front and back sprites
+            // Release assets when the card is destroyed
             if (frontSpriteHandle.IsValid())
             {
                 Addressables.Release(frontSpriteHandle);
@@ -129,11 +119,6 @@ namespace YagizEraslan.EclipsedEcho
             {
                 Addressables.Release(backSpriteHandle);
             }
-        }
-
-        private void OnDestroy()
-        {
-            ReleaseAssets();
         }
     }
 }

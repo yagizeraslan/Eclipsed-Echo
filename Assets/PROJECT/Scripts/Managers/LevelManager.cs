@@ -36,9 +36,9 @@ namespace YagizEraslan.EclipsedEcho
             {
                 cardDataList.Add(new CardData
                 {
-                    cardID = card.CardID,
-                    isFlipped = card.IsFaceUp,
-                    isMatched = card.IsMatched
+                    CardID = card.CardID,
+                    IsFlipped = card.IsFaceUp,
+                    IsMatched = card.IsMatched
                 });
             }
             return cardDataList;
@@ -49,14 +49,14 @@ namespace YagizEraslan.EclipsedEcho
             for (int i = 0; i < cardDataList.Count; i++)
             {
                 CardData cardData = cardDataList[i];
-                Card card = cards.FirstOrDefault(c => c.CardID == cardData.cardID);
+                Card card = cards.FirstOrDefault(c => c.CardID == cardData.CardID);
                 if (card != null)
                 {
-                    if (cardData.isFlipped)
+                    if (cardData.IsFlipped)
                     {
                         card.FlipToFrontSide();
                     }
-                    if (cardData.isMatched)
+                    if (cardData.IsMatched)
                     {
                         card.Match();
                     }
@@ -151,7 +151,7 @@ namespace YagizEraslan.EclipsedEcho
 
         private async Task SpawnCardsAsync()
         {
-            selectedBackSideSpriteAddress = backSideCards.backSideSpriteAddresses[UnityEngine.Random.Range(0, backSideCards.backSideSpriteAddresses.Count)];
+            selectedBackSideSpriteAddress = backSideCards.backSideSpriteAddresses[Random.Range(0, backSideCards.backSideSpriteAddresses.Count)];
 
             List<string> frontSideCardSpritesAddressables = new List<string>(selectedCardCategory.cardSpriteAddresses);
 
@@ -217,7 +217,7 @@ namespace YagizEraslan.EclipsedEcho
             for (int i = 0; i < list.Count; i++)
             {
                 T temp = list[i];
-                int randomIndex = UnityEngine.Random.Range(i, list.Count);
+                int randomIndex = Random.Range(i, list.Count);
                 list[i] = list[randomIndex];
                 list[randomIndex] = temp;
             }
@@ -235,6 +235,7 @@ namespace YagizEraslan.EclipsedEcho
             {
                 Destroy(child.gameObject);
             }
+            cards.Clear();
         }
 
         public GridLayoutGroup GetGridLayoutGroup()
