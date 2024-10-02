@@ -29,11 +29,13 @@ namespace YagizEraslan.EclipsedEcho
             IsFaceUp = false;
         }
 
+        // Check if the card can be clicked based on its current state
         private bool IsClickable()
         {
             return isInteractable && !IsMatched && !IsFaceUp;
         }
 
+        // Initialize the card with its front and back sprites
         public async Task Initialize(int cardID, string frontSpriteAddress, string backSpriteAddress)
         {
             CardID = cardID;
@@ -54,23 +56,27 @@ namespace YagizEraslan.EclipsedEcho
             await backSpriteHandle.Task;
             backImage.sprite = backSpriteHandle.Result;
 
-            animator.Play("ResetCard", -1, 0f);
+            // Reset the card to its initial state
+            ResetCard();
         }
 
+        // Set the card's interactable state
         public void SetInteractable(bool interactable)
         {
             isInteractable = interactable;
         }
 
+        // Handle pointer click event for flipping the card
         public void OnPointerClick(PointerEventData eventData)
         {
             if (!IsClickable()) return;
             GameController.Instance.CardSelected(this);
         }
 
+        // Flip the card to its front side with animation
         public void FlipToFrontSide()
         {
-            if (!IsFaceUp)
+            if (!IsFaceUp && !IsMatched)
             {
                 animator.SetTrigger("FlipFrontSide");
                 SoundManager.Instance.PlayFlipSound();
@@ -78,9 +84,10 @@ namespace YagizEraslan.EclipsedEcho
             }
         }
 
+        // Flip the card to its back side with animation
         public void FlipToBackSide()
         {
-            if (IsFaceUp)
+            if (IsFaceUp && !IsMatched)
             {
                 animator.SetTrigger("FlipBackSide");
                 SoundManager.Instance.PlayFlipSound();
@@ -88,6 +95,7 @@ namespace YagizEraslan.EclipsedEcho
             }
         }
 
+        // Mark the card as matched and play the match animation
         public void Match()
         {
             IsMatched = true;
@@ -96,6 +104,7 @@ namespace YagizEraslan.EclipsedEcho
             SoundManager.Instance.PlayMatchSound();
         }
 
+        // Mark the card as mismatched and play the mismatch animation
         public void Mismatch()
         {
             animator.SetTrigger("Mismatch");
@@ -103,14 +112,35 @@ namespace YagizEraslan.EclipsedEcho
             IsFaceUp = false;
         }
 
+        // Reset the card's state and prepare it for reuse (for object pooling)
+        public void ResetCard()
+        {
+            // Reset card state
+            IsMatched = false;
+            IsFaceUp = false;
+            SetInteractable(false);
+
+            // Reset the animator to its default state, clear all triggers
+            animator.Rebind();
+            animator.Update(0);
+
+            // Ensure the card shows the back side and hides the front side
+            backImage.gameObject.SetActive(true);
+            frontImage.gameObject.SetActive(false);
+
+            // Reset the card's scale in case animations changed it
+            transform.localScale = Vector3.one;
+        }
+
+        // Manually trigger showing the card (could be used for intro animations)
         public void ShowCard()
         {
             animator.SetTrigger("ShowCard");
         }
 
+        // Clean up and release loaded sprites when the card is destroyed
         private void OnDestroy()
         {
-            // Release assets when the card is destroyed
             if (frontSpriteHandle.IsValid())
             {
                 Addressables.Release(frontSpriteHandle);
@@ -119,6 +149,14 @@ namespace YagizEraslan.EclipsedEcho
             {
                 Addressables.Release(backSpriteHandle);
             }
+        }
+
+        // This method can be called by an animation event at the end of HideCard animation
+        public void OnHideCardAnimationEnd()
+        {
+            // Logic for handling the card when its hide animation is finished
+            Debug.Log($"Card {CardID} has completed HideCard animation.");
+            IsMatched = true; // Ensure the card is marked as matched after hiding
         }
     }
 }
