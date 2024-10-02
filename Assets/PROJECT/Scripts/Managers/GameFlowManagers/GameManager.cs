@@ -4,8 +4,9 @@ using UnityEngine.Events;
 
 namespace YagizEraslan.EclipsedEcho
 {
-    public class GameManager : MonoSingleton<GameManager>
+    public class GameManager : MonoBehaviour
     {
+        private const int SHORT_DELAY = 500;
         public ScoreManager ScoreManager { get; private set; }
         public TimerManager TimerManager { get; private set; }
         public CardManager CardManager { get; private set; }
@@ -17,9 +18,20 @@ namespace YagizEraslan.EclipsedEcho
         [SerializeField] private GameObject gameplayPanel;
         [SerializeField] private GameObject levelCompletedPanel;
 
-        protected override void Awake()
+
+        public static GameManager Instance;
+
+        private void Awake()
         {
-            base.Awake();
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                DestroyImmediate(gameObject);
+            }
+
             ScoreManager = gameObject.AddComponent<ScoreManager>();
             TimerManager = gameObject.AddComponent<TimerManager>();
             CardManager = gameObject.AddComponent<CardManager>();
@@ -67,25 +79,15 @@ namespace YagizEraslan.EclipsedEcho
 
         private async Task HandleLevelCompleteAsync()
         {
+            TimerManager.Instance.StopTimer();
             UIManager.Instance.UpdateLevelCompletedUI();
-            await Task.Delay(500);
+            await Task.Delay(SHORT_DELAY);
             SoundManager.Instance.PlayLevelCompletedSound();
-            await Task.Delay(500);
+            await Task.Delay(SHORT_DELAY);
 
             LevelManager.Instance.ClearGrid();
             gameplayPanel.SetActive(false);
             levelCompletedPanel.SetActive(true);
-        }
-
-        public void ResumeGame()
-        {
-            GameController.Instance.LoadGameFromState(DataPersistenceManager.Instance.LoadGameState());
-            ShowGameplayPanel();
-        }
-
-        public void SaveGame()
-        {
-            GameController.Instance.SaveGame();
         }
     }
 }

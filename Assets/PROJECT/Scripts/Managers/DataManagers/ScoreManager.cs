@@ -3,22 +3,41 @@ using UnityEngine.Events;
 
 namespace YagizEraslan.EclipsedEcho
 {
-    public class ScoreManager : MonoSingleton<ScoreManager>
+    public class ScoreManager : MonoBehaviour
     {
         public UnityAction<int> OnScoreUpdated;
         public UnityAction<int> OnBonusUpdated;
         public UnityAction<int> OnTurnsUpdated;
         public UnityAction<int> OnMatchesUpdated;
 
+        private int matchingScore = 100;
+        private int mismatchingScore = -10;
+
         private int score;
         private int bonus;
         private int turns;
         private int matches;
 
+        public int MatchingScore => matchingScore;
+        public int MismatchingScore => mismatchingScore;
         public int Score => score;
         public int Bonus => bonus;
         public int Turns => turns;
         public int Matches => matches;
+
+        public static ScoreManager Instance;
+
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
 
         public void InitializeStartingValues()
         {
@@ -41,7 +60,7 @@ namespace YagizEraslan.EclipsedEcho
 
         public void UpdateScore(int value)
         {
-            score = Mathf.Max(0, score + value); // Ensuring score doesn't go negative.
+            score = Mathf.Max(0, score + value); //Ensuring score doesn't go negative.
             OnScoreUpdated?.Invoke(score);
         }
 
@@ -51,23 +70,31 @@ namespace YagizEraslan.EclipsedEcho
             OnMatchesUpdated?.Invoke(matches);
         }
 
-        public int CalculateBonusScore(int totalPairs, int turns, int baseScore, int turnPenalty, int timePenalty)
+        public int CalculateBonusScore(int totalPairs, int turns, int baseScore, int timePenalty)
         {
-            int bonusMultiplier = 2;
 
-            if (totalPairs == turns)
+            int adjustedBaseScore = baseScore - timePenalty;
+
+            if (adjustedBaseScore < 0)
             {
-                bonus = (baseScore - turnPenalty - timePenalty) * bonusMultiplier;
+                adjustedBaseScore = 0;
             }
-            else if (totalPairs == turns + 2)
+
+            if (turns == totalPairs)
             {
-                bonus = 200;
+                int bonusMultiplier = 4;
+                bonus = adjustedBaseScore * bonusMultiplier;
             }
-            else if (totalPairs == turns + 4)
+            else if (turns <= totalPairs + 2)
+            {
+                int bonusMultiplier = 2;
+                bonus = adjustedBaseScore * bonusMultiplier;
+            }
+            else if (turns <= totalPairs + 4)
             {
                 bonus = 100;
             }
-            else if (totalPairs == turns + 6)
+            else if (turns <= totalPairs + 6)
             {
                 bonus = 50;
             }

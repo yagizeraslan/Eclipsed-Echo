@@ -3,7 +3,11 @@ guid: 45d8ba0ca3633ac4c987bcc8c31efea7
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - cardFlipClip: {fileID: 8300000, guid: bb848936a294bf046a33cd29cfca5322, type: 3}
+  - cardMatchClip: {fileID: 8300000, guid: 82a7939aa8ad8b34c8fa31872a0d4aa4, type: 3}
+  - cardNoMatchClip: {fileID: 8300000, guid: 3be1d29da55c3894fb7dce04528e6ed5, type: 3}
+  - levelCompletedClip: {fileID: 8300000, guid: eb07c77a81b57ac4d912a9d9f3e7416e, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

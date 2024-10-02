@@ -1,10 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SocialPlatforms.Impl;
+using UnityEngine.XR;
+using System.Text.RegularExpressions;
 
 namespace YagizEraslan.EclipsedEcho
 {
-    public class UIManager : MonoSingleton<UIManager>
+    public class UIManager : MonoBehaviour
     {
         [Header("Ongoing Gameplay Texts")]
         [SerializeField] private TextMeshProUGUI timerText;
@@ -16,16 +19,31 @@ namespace YagizEraslan.EclipsedEcho
         [Header("Completed Gameplay Texts")]
         [SerializeField] private TextMeshProUGUI levelCompletedTurnsText;
         [SerializeField] private TextMeshProUGUI levelCompletedTimeText;
+        public TextMeshProUGUI LevelCompletedTimeText => levelCompletedTimeText;
         [SerializeField] private TextMeshProUGUI levelCompletedBonusText;
         [SerializeField] private TextMeshProUGUI levelCompletedScoreText;
 
-        [Header("Level Completed Buttons")]
+        [Header("Resume Game? Buttons")]
         [SerializeField] private Button yesButton;
         [SerializeField] private Button noButton;
 
         [Header("Level Completed Buttons")]
         [SerializeField] private Button restartLevelButton;
         [SerializeField] private Button mainMenuButton;
+
+        public static UIManager Instance;
+
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
 
         private void Start()
         {
@@ -37,8 +55,8 @@ namespace YagizEraslan.EclipsedEcho
             GameManager.Instance.ScoreManager.OnMatchesUpdated += UpdateMatches;
             GameManager.Instance.TimerManager.OnTimerUpdated += UpdateTimer;
 
-            yesButton.onClick.AddListener(DataPersistenceManager.Instance.LoadLevel);
-            noButton.onClick.AddListener(DataPersistenceManager.Instance.DeclineLoadLevel);
+            yesButton.onClick.AddListener(GameController.Instance.LoadGameLevel);
+            noButton.onClick.AddListener(GameController.Instance.DeclineLoadLevel);
 
             restartLevelButton.onClick.AddListener(RestartLevel);
             mainMenuButton.onClick.AddListener(MainMenu);
@@ -69,6 +87,14 @@ namespace YagizEraslan.EclipsedEcho
             timerText.text = $": {timer.ToString("F1")}";
         }
 
+        public void ResetAllUIValues()
+        {
+            scoreText.text = $": 0.0";
+            timerText.text = $": 0.0";
+            turnsText.text = $": 0.0";
+            matchesText.text = $": 0.0";
+        }
+
         public void UpdateLevelCompletedUI()
         {
             int finalScore = ScoreManager.Instance.Score;
@@ -83,13 +109,15 @@ namespace YagizEraslan.EclipsedEcho
 
         private void RestartLevel()
         {
+            TimerManager.Instance.ResetTimer();
             int selectedGridSize = DataPersistenceManager.Instance.SelectedGridSize;
             int selectedCategoryKey = DataPersistenceManager.Instance.SelectedCategoryKey;
-            MainMenuManager.Instance.GenerateLevel(selectedGridSize, selectedCategoryKey);
+            LevelManager.Instance.GenerateLevel(selectedGridSize, selectedCategoryKey);
         }
 
         private void MainMenu()
         {
+            TimerManager.Instance.ResetTimer();
             highScoreText.text = $"High Score: {DataPersistenceManager.Instance.LoadHighScore().ToString()}";
             GameManager.Instance.ShowMainMenuPanel();
         }
@@ -102,8 +130,8 @@ namespace YagizEraslan.EclipsedEcho
             GameManager.Instance.ScoreManager.OnMatchesUpdated -= UpdateMatches;
             GameManager.Instance.TimerManager.OnTimerUpdated -= UpdateTimer;
 
-            yesButton.onClick.RemoveListener(DataPersistenceManager.Instance.LoadLevel);
-            noButton.onClick.RemoveListener(DataPersistenceManager.Instance.DeclineLoadLevel);
+            yesButton.onClick.RemoveListener(GameController.Instance.LoadGameLevel);
+            noButton.onClick.RemoveListener(GameController.Instance.DeclineLoadLevel);
 
             restartLevelButton.onClick.RemoveListener(RestartLevel);
             mainMenuButton.onClick.RemoveListener(MainMenu);

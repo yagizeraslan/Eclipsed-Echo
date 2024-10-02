@@ -53,7 +53,6 @@ namespace YagizEraslan.EclipsedEcho
                     LevelManager.Instance.TotalPairs / 2,
                     GameManager.Instance.ScoreManager.Turns,
                     GameManager.Instance.ScoreManager.Matches * 100,
-                    GameManager.Instance.ScoreManager.Turns * 10,
                     Mathf.FloorToInt(GameManager.Instance.TimerManager.Timer)
                 );
 
@@ -67,16 +66,16 @@ namespace YagizEraslan.EclipsedEcho
         private void HandleMatchingCards(Card firstCard, Card secondCard)
         {
             GameManager.Instance.ScoreManager.IncrementMatches();
-            GameManager.Instance.ScoreManager.UpdateScore(100);
+            GameManager.Instance.ScoreManager.UpdateScore(ScoreManager.Instance.MatchingScore);
 
             firstCard.Match();
             secondCard.Match();
-            GameManager.Instance.SaveGame();
+            GameController.Instance.SaveGameLevel();
         }
 
         private void HandleMismatchingCards(Card firstCard, Card secondCard)
         {
-            GameManager.Instance.ScoreManager.UpdateScore(-10);
+            GameManager.Instance.ScoreManager.UpdateScore(ScoreManager.Instance.MismatchingScore);
             firstCard.Mismatch();
             secondCard.Mismatch();
         }

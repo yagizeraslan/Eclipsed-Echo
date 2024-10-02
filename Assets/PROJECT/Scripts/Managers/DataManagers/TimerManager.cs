@@ -3,7 +3,7 @@ using UnityEngine.Events;
 
 namespace YagizEraslan.EclipsedEcho
 {
-    public class TimerManager : MonoSingleton<TimerManager>
+    public class TimerManager : MonoBehaviour
     {
         public UnityAction<float> OnTimerUpdated;
 
@@ -12,6 +12,20 @@ namespace YagizEraslan.EclipsedEcho
         private float lastDisplayedTime = 0f;
 
         public float Timer => timer;
+
+        public static TimerManager Instance;
+
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
 
         public void StartTimer()
         {
@@ -23,6 +37,18 @@ namespace YagizEraslan.EclipsedEcho
         public void StopTimer()
         {
             isTiming = false;
+        }
+
+        public void ResetTimer()
+        {
+            isTiming = false;
+            timer = 0f;
+            OnTimerUpdated?.Invoke(timer);
+        }
+
+        public void SetTimer(float savedTime)
+        {
+            timer = savedTime;
         }
 
         public void UpdateTimer(float deltaTime)

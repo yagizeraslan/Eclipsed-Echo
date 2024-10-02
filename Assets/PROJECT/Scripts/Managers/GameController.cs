@@ -3,21 +3,29 @@ using UnityEngine;
 
 namespace YagizEraslan.EclipsedEcho
 {
-    public class GameController : MonoSingleton<GameController>
+    public class GameController : MonoBehaviour
     {
         public ScoreManager ScoreManager => GameManager.Instance.ScoreManager;
         public TimerManager TimerManager => GameManager.Instance.TimerManager;
         public CardManager CardManager => GameManager.Instance.CardManager;
 
-        private void Start()
+        public static GameController Instance;
+
+        private void Awake()
         {
-            InitializeStartingValues();
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
 
-        public void InitializeStartingValues()
+        private void Start()
         {
             ScoreManager.InitializeStartingValues();
-            TimerManager.StartTimer();
         }
 
         private void Update()
@@ -25,18 +33,21 @@ namespace YagizEraslan.EclipsedEcho
             TimerManager.UpdateTimer(Time.deltaTime);
         }
 
-        public void SaveGame()
+        public void SaveGameLevel()
         {
-            List<CardData> cardData = LevelManager.Instance.GetCardsData();
-            DataPersistenceManager.Instance.SaveGameState(cardData, ScoreManager.Score, TimerManager.Timer, ScoreManager.Turns, ScoreManager.Matches);
+            DataPersistenceManager.Instance.SaveGameState(LevelManager.Instance.GetCardsData(), ScoreManager.Score, TimerManager.Timer, ScoreManager.Turns, ScoreManager.Matches);
         }
 
-        public void LoadGameFromState(GameState gameState)
+        public void LoadGameLevel()
         {
-            LevelManager.Instance.LoadCardsFromState(gameState.cardData);
-            ScoreManager.InitializeStartingValues();
-            ScoreManager.UpdateScore(gameState.score);
-            TimerManager.StartTimer();
+            DataPersistenceManager.Instance.ClearSavedGame();
+            LevelManager.Instance.GenerateLevel(DataPersistenceManager.Instance.SelectedGridSize, DataPersistenceManager.Instance.SelectedCategoryKey);
+        }
+
+        public void DeclineLoadLevel()
+        {
+            DataPersistenceManager.Instance.ClearSavedGame();
+            GameManager.Instance.ShowMainMenuPanel();
         }
 
         public void CardSelected(Card card)

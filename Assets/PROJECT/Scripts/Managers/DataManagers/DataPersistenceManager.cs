@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace YagizEraslan.EclipsedEcho
 {
-    public class DataPersistenceManager : MonoSingleton<DataPersistenceManager>
+    public class DataPersistenceManager : MonoBehaviour
     {
         private const string SELECTED_GRID_KEY = "SelectedGridType";
         private const string SELECTED_CATEGORY_KEY = "SelectedCategoryType";
@@ -12,6 +12,20 @@ namespace YagizEraslan.EclipsedEcho
 
         public int SelectedGridSize => PlayerPrefs.GetInt(SELECTED_GRID_KEY);
         public int SelectedCategoryKey => PlayerPrefs.GetInt(SELECTED_CATEGORY_KEY);
+
+        public static DataPersistenceManager Instance;
+
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
 
         #region PlayerPrefs Utilities
 
@@ -137,27 +151,6 @@ namespace YagizEraslan.EclipsedEcho
         {
             return PlayerPrefs.HasKey(GAME_STATE_KEY);
         }
-
-        #endregion
-
-        #region Level Load/Resume Actions
-
-        public void LoadLevel()
-        {
-            if (HasSavedGame())
-            {
-                LoadGameState();
-                GameManager.Instance.ShowGameplayPanel();
-                GameManager.Instance.ResumeGame();
-            }
-        }
-
-        public void DeclineLoadLevel()
-        {
-            ClearSavedGame();
-            GameManager.Instance.ShowMainMenuPanel();
-        }
-
         #endregion
     }
 

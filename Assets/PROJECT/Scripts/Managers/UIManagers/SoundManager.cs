@@ -5,15 +5,25 @@ using UnityEngine;
 namespace YagizEraslan.EclipsedEcho
 {
     [RequireComponent(typeof(AudioSource))]
-    public class SoundManager : MonoSingleton<SoundManager>
+    public class SoundManager : MonoBehaviour
     {
         [SerializeField] private SoundSettings soundSettings;
 
         private AudioSource audioSource;
 
-        protected override void Awake()
+        public static SoundManager Instance;
+
+        private void Awake()
         {
-            base.Awake();
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+
             audioSource = GetComponent<AudioSource>();
         }
 

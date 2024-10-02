@@ -8,31 +8,52 @@ using System.Linq;
 
 namespace YagizEraslan.EclipsedEcho
 {
-    public class LevelManager : MonoSingleton<LevelManager>
+    public class LevelManager : MonoBehaviour
     {
         [SerializeField] private GridLayoutGroup cardGridLayoutGroup;
         [SerializeField] private GameObject cardPrefab;
         [SerializeField] private BackSideCards backSideCards;
         [SerializeField] private List<CardCategory> cardCategories;
-        [SerializeField] private int poolSize = 20; // You can adjust this based on your game
+        [SerializeField] private int poolSize = 60; // You can adjust this based on your game
 
         private CardCategory selectedCardCategory;
         private List<Card> cards = new List<Card>();
         private int selectedGridSize;
         private string selectedBackSideSpriteAddress;
 
-        private ObjectPool<Card> cardPool; // The Object Pool
+        private ObjectPool<Card> cardPool;
 
         [SerializeField] private float minCellSize = 400f, maxCellSize = 500f;
 
         public float MinCellSize => minCellSize;
         public float MaxCellSize => maxCellSize;
 
-        public List<CardCategory> GetCardCategories()
+        public List<CardCategory> GetCardCategories() { return cardCategories; }
+
+        public int TotalPairs { get; private set; }
+
+        public static LevelManager Instance;
+
+        private void Awake()
         {
-            return cardCategories;
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
 
+        private void Start()
+        {
+            GameManager.Instance.OnGameStart += SetupLevel;
+            InitializeCardPool();
+        }
+
+
+        #region Card Management
         public List<CardData> GetCardsData()
         {
             List<CardData> cardDataList = new List<CardData>();
@@ -46,6 +67,66 @@ namespace YagizEraslan.EclipsedEcho
                 });
             }
             return cardDataList;
+        }
+
+        private async Task SpawnCardsAsync()
+        {
+            selectedBackSideSpriteAddress = backSideCards.backSideSpriteAddresses[Random.Range(0, backSideCards.backSideSpriteAddresses.Count)];
+
+            List<string> frontSideCardSpritesAddressables = new List<string>(selectedCardCategory.cardSpriteAddresses);
+
+            List<int> cardIDs = new List<int>();
+            int totalPairs = selectedGridSize / 2;
+
+            TotalPairs = totalPairs;
+
+            for (int i = 0; i < totalPairs; i++)
+            {
+                cardIDs.Add(i);
+                cardIDs.Add(i);
+            }
+
+            cardIDs = ShuffleList(cardIDs);
+            frontSideCardSpritesAddressables = ShuffleList(frontSideCardSpritesAddressables);
+
+            // Deactivate all active cards before spawning new ones
+            foreach (var card in cards)
+            {
+                cardPool.ReturnObjectToPool(card);
+            }
+            cards.Clear();
+
+            // Spawn cards from the pool
+            for (int i = 0; i < cardIDs.Count; i++)
+            {
+                Card card = cardPool.GetObjectFromPool();
+                card.ResetCard(); // Ensure the card is reset before use
+                cards.Add(card);
+
+                int cardID = cardIDs[i];
+                string frontSpriteAddress = frontSideCardSpritesAddressables[cardID % frontSideCardSpritesAddressables.Count];
+
+                await card.Initialize(cardID, frontSpriteAddress, selectedBackSideSpriteAddress);
+            }
+
+            // Start the cascading flip sequence
+            List<Task> flipTasks = new List<Task>();
+            float delayBetweenCards = 100f;
+            for (int i = 0; i < cards.Count; i++)
+            {
+                Card card = cards[i];
+                float delay = i * delayBetweenCards;
+                flipTasks.Add(ShowAndFlipCard(card, delay));
+            }
+
+            await Task.WhenAll(flipTasks);
+
+            foreach (var card in cards)
+            {
+                card.SetInteractable(true);
+            }
+
+            TimerManager.Instance.StartTimer();
         }
 
         public void LoadCardsFromState(List<CardData> cardDataList)
@@ -68,27 +149,50 @@ namespace YagizEraslan.EclipsedEcho
             }
         }
 
-        public int TotalPairs { get; private set; }
-
-        private void Start()
+        public void ClearGrid()
         {
-            GameManager.Instance.OnGameStart += SetupLevel;
-            InitializeCardPool();
-        }
+            foreach (Transform child in cardGridLayoutGroup.transform)
+            {
+                Card card = child.GetComponent<Card>();
+                if (card != null)
+                {
+                    cardPool.ReturnObjectToPool(card);
+                }
+            }
 
-        // Initialize the object pool
+            cards.Clear(); // Clear the cards list
+        }
         private void InitializeCardPool()
         {
             cardPool = new ObjectPool<Card>(cardPrefab, poolSize, cardGridLayoutGroup.transform);
         }
+        #endregion
 
+
+        #region Level Management
         public void GenerateLevel(int gridSize, int cardCategoryIndex)
         {
             ScoreManager.Instance.InitializeStartingValues();
             TimerManager.Instance.ResetTimer();
-            SetSelectedGridSize(gridSize);
-            SetSelectedCardCategory(cardCategoryIndex);
+
+            if (!DataPersistenceManager.Instance.HasSavedGame())
+            {
+                SetSelectedGridSize(gridSize);
+                SetSelectedCardCategory(cardCategoryIndex);
+            }
+            else
+            {
+                SetSelectedGridSize(DataPersistenceManager.Instance.SelectedGridSize);
+                SetSelectedCardCategory(DataPersistenceManager.Instance.SelectedCategoryKey);
+            }
             GameManager.Instance.ShowGameplayPanel();
+        }
+
+        private void SetupLevel()
+        {
+            cardPool.ResetPoolIndex();
+            AdjustGridLayout();
+            SpawnCardsAsync();
         }
 
         public void SetSelectedCardCategory(int index)
@@ -107,12 +211,19 @@ namespace YagizEraslan.EclipsedEcho
         {
             selectedGridSize = gridSize;
         }
+        #endregion
 
-        private void SetupLevel()
+
+        #region Grid Layout
+        private void AdjustGridLayout()
         {
-            cardPool.ResetPoolIndex(); // Reset pool index to start from the first pooled object
-            AdjustGridLayout();
-            SpawnCardsAsync();
+            int totalCards = selectedGridSize;
+
+            (int columns, int rows, float cellSize) = CalculateOptimalGridDimensions(totalCards);
+
+            cellSize = Mathf.Clamp(cellSize, minCellSize, maxCellSize);
+
+            ApplyGridLayoutProperties(columns, cellSize);
         }
 
         public List<int> GenerateGridSizeOptions(int minColumns, int maxColumns, int maxRows, Rect gridRect, Vector2 spacing)
@@ -139,17 +250,6 @@ namespace YagizEraslan.EclipsedEcho
 
             totalCardOptions.Sort();
             return totalCardOptions;
-        }
-
-        private void AdjustGridLayout()
-        {
-            int totalCards = selectedGridSize;
-
-            (int columns, int rows, float cellSize) = CalculateOptimalGridDimensions(totalCards);
-
-            cellSize = Mathf.Clamp(cellSize, minCellSize, maxCellSize);
-
-            ApplyGridLayoutProperties(columns, cellSize);
         }
 
         private (int columns, int rows, float cellSize) CalculateOptimalGridDimensions(int totalCards)
@@ -196,78 +296,14 @@ namespace YagizEraslan.EclipsedEcho
             cardGridLayoutGroup.cellSize = new Vector2(cellSize, cellSize);
         }
 
-        private async Task SpawnCardsAsync()
+        public GridLayoutGroup GetGridLayoutGroup()
         {
-            selectedBackSideSpriteAddress = backSideCards.backSideSpriteAddresses[Random.Range(0, backSideCards.backSideSpriteAddresses.Count)];
-
-            List<string> frontSideCardSpritesAddressables = new List<string>(selectedCardCategory.cardSpriteAddresses);
-
-            List<int> cardIDs = new List<int>();
-            int totalPairs = selectedGridSize / 2;
-
-            TotalPairs = totalPairs;
-
-            for (int i = 0; i < totalPairs; i++)
-            {
-                cardIDs.Add(i);
-                cardIDs.Add(i);
-            }
-
-            cardIDs = ShuffleList(cardIDs);
-            frontSideCardSpritesAddressables = ShuffleList(frontSideCardSpritesAddressables);
-
-            // Deactivate all active cards before spawning new ones
-            foreach (var card in cards)
-            {
-                cardPool.ReturnObjectToPool(card);
-            }
-            cards.Clear();
-
-            // Spawn cards from the pool
-            for (int i = 0; i < cardIDs.Count; i++)
-            {
-                Card card = cardPool.GetObjectFromPool();
-                //card.ResetCard(); // Ensure the card is reset before use
-                cards.Add(card);
-
-                int cardID = cardIDs[i];
-                string frontSpriteAddress = frontSideCardSpritesAddressables[cardID % frontSideCardSpritesAddressables.Count];
-
-                await card.Initialize(cardID, frontSpriteAddress, selectedBackSideSpriteAddress);
-            }
-
-            // Start the cascading flip sequence
-            List<Task> flipTasks = new List<Task>();
-            float delayBetweenCards = 100f;
-            for (int i = 0; i < cards.Count; i++)
-            {
-                Card card = cards[i];
-                float delay = i * delayBetweenCards;
-                flipTasks.Add(ShowAndFlipCard(card, delay));
-            }
-
-            await Task.WhenAll(flipTasks);
-
-            foreach (var card in cards)
-            {
-                card.SetInteractable(true);
-            }
-
-            TimerManager.Instance.StartTimer();
+            return cardGridLayoutGroup;
         }
+        #endregion
 
 
-        private async Task ShowAndFlipCard(Card card, float delay)
-        {
-            await Task.Delay((int)delay);
-            card.ShowCard();
-            await Task.Delay(500);
-            card.FlipToFrontSide();
-            await Task.Delay(1500);
-            card.FlipToBackSide();
-            await Task.Delay(500);
-        }
-
+        #region Utilitty
         private List<T> ShuffleList<T>(List<T> list)
         {
             for (int i = 0; i < list.Count; i++)
@@ -280,24 +316,20 @@ namespace YagizEraslan.EclipsedEcho
             return list;
         }
 
-        public void ClearGrid()
-        {
-            // Return each active card to the pool instead of destroying it
-            foreach (Transform child in cardGridLayoutGroup.transform)
-            {
-                Card card = child.GetComponent<Card>();
-                if (card != null)
-                {
-                    cardPool.ReturnObjectToPool(card); // Return to pool
-                }
-            }
+        private const int SHOW_DELAY = 500;
+        private const int FLIP_DELAY = 1500;
+        private const int HIDE_DELAY = 500;
 
-            cards.Clear(); // Clear the cards list
-        }
-
-        public GridLayoutGroup GetGridLayoutGroup()
+        private async Task ShowAndFlipCard(Card card, float delay)
         {
-            return cardGridLayoutGroup;
+            await Task.Delay((int)delay);
+            card.ShowCard();
+            await Task.Delay(SHOW_DELAY);
+            card.FlipToFrontSide();
+            await Task.Delay(FLIP_DELAY);
+            card.FlipToBackSide();
+            await Task.Delay(HIDE_DELAY);
         }
+        #endregion
     }
 }

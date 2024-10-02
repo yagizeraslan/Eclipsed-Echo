@@ -29,7 +29,6 @@ namespace YagizEraslan.EclipsedEcho
             IsFaceUp = false;
         }
 
-        // Check if the card can be clicked based on its current state
         private bool IsClickable()
         {
             return isInteractable && !IsMatched && !IsFaceUp;
@@ -56,24 +55,20 @@ namespace YagizEraslan.EclipsedEcho
             await backSpriteHandle.Task;
             backImage.sprite = backSpriteHandle.Result;
 
-            // Reset the card to its initial state
             ResetCard();
         }
 
-        // Set the card's interactable state
         public void SetInteractable(bool interactable)
         {
             isInteractable = interactable;
         }
 
-        // Handle pointer click event for flipping the card
         public void OnPointerClick(PointerEventData eventData)
         {
             if (!IsClickable()) return;
             GameController.Instance.CardSelected(this);
         }
 
-        // Flip the card to its front side with animation
         public void FlipToFrontSide()
         {
             if (!IsFaceUp && !IsMatched)
@@ -84,7 +79,6 @@ namespace YagizEraslan.EclipsedEcho
             }
         }
 
-        // Flip the card to its back side with animation
         public void FlipToBackSide()
         {
             if (IsFaceUp && !IsMatched)
@@ -95,7 +89,6 @@ namespace YagizEraslan.EclipsedEcho
             }
         }
 
-        // Mark the card as matched and play the match animation
         public void Match()
         {
             IsMatched = true;
@@ -104,7 +97,6 @@ namespace YagizEraslan.EclipsedEcho
             SoundManager.Instance.PlayMatchSound();
         }
 
-        // Mark the card as mismatched and play the mismatch animation
         public void Mismatch()
         {
             animator.SetTrigger("Mismatch");
@@ -112,10 +104,9 @@ namespace YagizEraslan.EclipsedEcho
             IsFaceUp = false;
         }
 
-        // Reset the card's state and prepare it for reuse (for object pooling)
+        // Reset the card's state and prepare it for reuse (updated for object pooling)
         public void ResetCard()
         {
-            // Reset card state
             IsMatched = false;
             IsFaceUp = false;
             SetInteractable(false);
@@ -124,7 +115,6 @@ namespace YagizEraslan.EclipsedEcho
             animator.Rebind();
             animator.Update(0);
 
-            // Ensure the card shows the back side and hides the front side
             backImage.gameObject.SetActive(true);
             frontImage.gameObject.SetActive(false);
 
@@ -132,7 +122,7 @@ namespace YagizEraslan.EclipsedEcho
             transform.localScale = Vector3.one;
         }
 
-        // Manually trigger showing the card (could be used for intro animations)
+
         public void ShowCard()
         {
             animator.SetTrigger("ShowCard");
@@ -149,14 +139,6 @@ namespace YagizEraslan.EclipsedEcho
             {
                 Addressables.Release(backSpriteHandle);
             }
-        }
-
-        // This method can be called by an animation event at the end of HideCard animation
-        public void OnHideCardAnimationEnd()
-        {
-            // Logic for handling the card when its hide animation is finished
-            Debug.Log($"Card {CardID} has completed HideCard animation.");
-            IsMatched = true; // Ensure the card is marked as matched after hiding
         }
     }
 }

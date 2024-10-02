@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace YagizEraslan.EclipsedEcho
 {
-    public class MainMenuManager : MonoSingleton<MainMenuManager>
+    public class MainMenuManager : MonoBehaviour
     {
         [SerializeField] private TMP_Dropdown categoryDropdown;
         [SerializeField] private TMP_Dropdown layoutDropdown;
@@ -19,16 +19,32 @@ namespace YagizEraslan.EclipsedEcho
         public List<CardCategory> CardCategories => cardCategories;
         public TMP_Dropdown CategoryDropdown => categoryDropdown;
 
+        public static MainMenuManager Instance;
+
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
+
         private void Start()
         {
             levelManager = LevelManager.Instance;
             playButton.onClick.AddListener(OnPlayButtonClicked);
+
 
             PopulateDropdowns();
         }
 
         private void PopulateDropdowns()
         {
+            // Populate dropdowns initially or when data changes
             PopulateLayoutDropdown();
             PopulateCategoryDropdown();
         }
@@ -52,50 +68,16 @@ namespace YagizEraslan.EclipsedEcho
             int maxColumns = Mathf.FloorToInt((gridRect.width + spacing.x) / (levelManager.MinCellSize + spacing.x));
             int maxRows = Mathf.FloorToInt((gridRect.height + spacing.y) / (levelManager.MinCellSize + spacing.y));
 
-            availableGridSizes = GenerateGridSizeOptions(minColumns, maxColumns, maxRows, gridRect, spacing);
+            availableGridSizes = LevelManager.Instance.GenerateGridSizeOptions(minColumns, maxColumns, maxRows, gridRect, spacing);
 
             layoutDropdown.ClearOptions();
             layoutDropdown.AddOptions(availableGridSizes.ConvertAll(size => size.ToString()));
         }
 
-        private List<int> GenerateGridSizeOptions(int minColumns, int maxColumns, int maxRows, Rect gridRect, Vector2 spacing)
-        {
-            var totalCardOptions = new List<int>();
-
-            for (int columns = minColumns; columns <= maxColumns; columns++)
-            {
-                float cellWidth = (gridRect.width - (columns - 1) * spacing.x) / columns;
-                if (cellWidth < levelManager.MinCellSize) continue;
-
-                for (int rows = 2; rows <= maxRows; rows++)
-                {
-                    float cellHeight = (gridRect.height - (rows - 1) * spacing.y) / rows;
-                    if (cellHeight < levelManager.MinCellSize) continue;
-
-                    int totalCards = columns * rows;
-                    if (totalCards % 2 == 0 && !totalCardOptions.Contains(totalCards))
-                    {
-                        totalCardOptions.Add(totalCards);
-                    }
-                }
-            }
-
-            totalCardOptions.Sort();
-            return totalCardOptions;
-        }
-
         private void OnPlayButtonClicked()
         {
             DataPersistenceManager.Instance.SaveSelectedLevelType(availableGridSizes[layoutDropdown.value], categoryDropdown.value);
-            GenerateLevel(availableGridSizes[layoutDropdown.value], categoryDropdown.value);
-        }
-
-        public void GenerateLevel(int gridSize, int cardCategoryIndex)
-        {
-            GameController.Instance.InitializeStartingValues();
-            levelManager.SetSelectedGridSize(gridSize);
-            levelManager.SetSelectedCardCategory(cardCategoryIndex);
-            GameManager.Instance.ShowGameplayPanel();
+            LevelManager.Instance.GenerateLevel(availableGridSizes[layoutDropdown.value], categoryDropdown.value);
         }
 
         private void OnDestroy()
